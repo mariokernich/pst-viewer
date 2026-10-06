@@ -1,0 +1,9 @@
+packages:
+  - apps/desktop
+  - apps/web
+
+# Dependencies whose install scripts may run (pnpm blocks all others).
+allowBuilds:
+  electron: true
+  esbuild: true
+  electron-winstaller: false

@@ -1,8 +1,41 @@
+# Dependencies & tooling
 node_modules/
-out/
-dist/
+.pnpm-store/
+.turbo/
+*.tsbuildinfo
 *.log
 .DS_Store
-.vite/
 coverage/
-*.tsbuildinfo
+
+# Desktop (Electron)
+apps/desktop/out/
+apps/desktop/dist/
+
+# Website (Next.js)
+apps/web/.next/
+apps/web/out/
+apps/web/next-env.d.ts
+.vercel/
+
+# Rust core
+target/
+
+# iOS / Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+apps/ios/Frameworks/*.xcframework/
+apps/ios/Generated/
+
+# Android / Gradle
+.gradle/
+.kotlin/
+local.properties
+apps/android/**/build/
+apps/android/app/src/main/jniLibs/
+apps/android/**/generated/
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
