@@ -23,7 +23,7 @@ A fast, modern and strictly **read-only** desktop viewer for e-mail archives, bu
 
 ## Read-only guarantee
 
-Archives are opened with the read-only flag (`fs.openSync(path, 'r')`) or read with `fs.readFile` inside a separate utility process; the app has no code path that writes to them. The only things written to disk are:
+Archives are opened with the read-only flag (`fs.openSync(path, 'r')`) or read with `fs.readFile` inside a separate utility process; the app has no code path that writes to them. That worker process does not write any files at all – attachments and exports are handed to the main process, which writes them where the user chose. The only things written to disk are:
 
 - the app settings (`settings.json` in the user data folder: window size, theme, language and the list of recent files – paths and item counts only, never mail content),
 - attachments and exports you explicitly save via a save dialog (existing files are never overwritten when saving all attachments),
@@ -87,9 +87,14 @@ PST_TEST_FILE=~/Downloads/sample.pst pnpm test   # plus integration tests agains
 pnpm build           # production build into out/
 pnpm dist:mac        # package (dmg) into dist/; also dist:win, dist:linux
 pnpm icons           # re-render build/icon.png from build/icon.svg
+pnpm store-assets    # re-render the Microsoft Store logos in build/appx
+APPLE_TEAM_ID=… pnpm dist:mas   # Mac App Store package (sandboxed, universal)
+pnpm dist:appx       # Microsoft Store package, on Windows (needs MS_STORE_IDENTITY_NAME, MS_STORE_PUBLISHER)
 ```
 
-Unsigned local macOS builds work out of the box (`CSC_IDENTITY_AUTO_DISCOVERY=false pnpm dist:mac` skips looking for a signing identity). For distribution configure a Developer ID certificate and notarization for electron-builder.
+Unsigned local macOS builds work out of the box (`CSC_IDENTITY_AUTO_DISCOVERY=false pnpm dist:mac` skips looking for a signing identity). For distribution outside the stores configure a Developer ID certificate and notarization for electron-builder. The store builds are described in [docs/store-release.md](../../docs/store-release.md).
+
+**Mac App Store build:** the app runs in the App Sandbox (`build/entitlements.mas.template.plist`): it may read files the user picked and write files the user saves. Recent files are reopened through security-scoped bookmarks (`src/main/sandbox.ts`); files opened by drag & drop or from Finder have no bookmark, so reopening them later asks the user to confirm the file once.
 
 ## Architecture
 
