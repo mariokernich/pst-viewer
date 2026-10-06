@@ -1,0 +1,19 @@
+[package]
+name = "outlook-pst"
+version = "1.2.0"
+edition = "2021"
+rust-version = "1.82"
+authors = ["Microsoft"]
+description = "Outlook PST Store Provider in Rust (vendored with patches, see PATCHES.md)"
+license = "MIT"
+repository = "https://github.com/microsoft/outlook-pst-rs"
+publish = false
+
+[lib]
+name = "outlook_pst"
+path = "src/lib.rs"
+
+[dependencies]
+byteorder = "1"
+thiserror = "2"
+tracing = "0.1"
