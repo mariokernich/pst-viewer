@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/uniffi-bindgen"]
+# Third-party sources with local patches, built as dependencies only.
+exclude = ["crates/vendor/outlook-pst"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[patch.crates-io]
+outlook-pst = { path = "crates/vendor/outlook-pst" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+# Symbol names stay for backtraces; debug info is dropped.
+strip = "debuginfo"
+# UniFFI turns panics into errors, which needs unwinding.
+panic = "unwind"

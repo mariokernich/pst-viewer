@@ -1,0 +1,8 @@
+[bindings.swift]
+module_name = "PstViewerCore"
+ffi_module_name = "PstViewerCoreFFI"
+ffi_module_filename = "PstViewerCoreFFI"
+
+[bindings.kotlin]
+package_name = "de.kernich.pstviewer.core"
+cdylib_name = "pst_viewer_core"
