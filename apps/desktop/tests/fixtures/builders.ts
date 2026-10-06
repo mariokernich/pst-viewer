@@ -103,7 +103,7 @@ function addProps(cfb: CFB.CFB$Container, storage: string, props: Prop[], header
   CFB.utils.cfb_add(cfb, `${storage}__properties_version1.0`, Buffer.concat(entries))
 }
 
-export function buildMsg(options: {
+export interface MsgOptions {
   subject: string
   senderName: string
   senderEmail: string
@@ -112,17 +112,32 @@ export function buildMsg(options: {
   html?: string
   date: Date
   attachments?: { filename: string; content: Buffer; mimeType: string }[]
-}): Buffer {
+  /** Attached Outlook items (afEmbeddedMessage). */
+  messages?: MsgOptions[]
+}
+
+export function buildMsg(options: MsgOptions): Buffer {
   const cfb = CFB.utils.cfb_new()
   // Named property mapping (empty).
   for (const name of ['00020102', '00030102', '00040102']) CFB.utils.cfb_add(cfb, `/__nameid_version1.0/__substg1.0_${name}`, Buffer.alloc(0))
+  writeMessage(cfb, '/', options, false)
+  return Buffer.from(CFB.write(cfb, { type: 'buffer' }) as Uint8Array)
+}
 
+function storageName(prefix: string, i: number): string {
+  return `${prefix}#${i.toString(16).toUpperCase().padStart(8, '0')}/`
+}
+
+/** Writes a message into `storage`; embedded messages have a shorter property header. */
+function writeMessage(cfb: CFB.CFB$Container, storage: string, options: MsgOptions, embedded: boolean): void {
   const attachments = options.attachments ?? []
-  const header = Buffer.alloc(32)
+  const messages = options.messages ?? []
+  const attachmentCount = attachments.length + messages.length
+  const header = Buffer.alloc(embedded ? 24 : 32)
   header.writeUInt32LE(options.to.length, 8)
-  header.writeUInt32LE(attachments.length, 12)
+  header.writeUInt32LE(attachmentCount, 12)
   header.writeUInt32LE(options.to.length, 16)
-  header.writeUInt32LE(attachments.length, 20)
+  header.writeUInt32LE(attachmentCount, 20)
   const props: Prop[] = [
     { id: 0x001a, type: PT_UNICODE, value: 'IPM.Note' },
     { id: 0x0037, type: PT_UNICODE, value: options.subject },
@@ -135,13 +150,12 @@ export function buildMsg(options: {
     { id: 0x0e07, type: PT_LONG, value: 1 }
   ]
   if (options.html) props.push({ id: 0x1013, type: PT_BINARY, value: Buffer.from(options.html, 'utf8') }, { id: 0x3fde, type: PT_LONG, value: 65001 })
-  addProps(cfb, '/', props, header)
+  addProps(cfb, storage, props, header)
 
   options.to.forEach((recipient, i) => {
-    const storage = `/__recip_version1.0_#${i.toString(16).toUpperCase().padStart(8, '0')}/`
     addProps(
       cfb,
-      storage,
+      storageName(`${storage}__recip_version1.0_`, i),
       [
         { id: 0x0c15, type: PT_LONG, value: 1 },
         { id: 0x3001, type: PT_UNICODE, value: recipient.name },
@@ -153,10 +167,9 @@ export function buildMsg(options: {
   })
 
   attachments.forEach((attachment, i) => {
-    const storage = `/__attach_version1.0_#${i.toString(16).toUpperCase().padStart(8, '0')}/`
     addProps(
       cfb,
-      storage,
+      storageName(`${storage}__attach_version1.0_`, i),
       [
         { id: 0x3705, type: PT_LONG, value: 1 },
         { id: 0x3707, type: PT_UNICODE, value: attachment.filename },
@@ -168,5 +181,17 @@ export function buildMsg(options: {
     )
   })
 
-  return Buffer.from(CFB.write(cfb, { type: 'buffer' }) as Uint8Array)
+  messages.forEach((message, i) => {
+    const attachStorage = storageName(`${storage}__attach_version1.0_`, attachments.length + i)
+    addProps(
+      cfb,
+      attachStorage,
+      [
+        { id: 0x3705, type: PT_LONG, value: 5 },
+        { id: 0x3001, type: PT_UNICODE, value: message.subject }
+      ],
+      Buffer.alloc(8)
+    )
+    writeMessage(cfb, `${attachStorage}__substg1.0_3701000D/`, message, true)
+  })
 }

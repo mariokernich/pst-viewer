@@ -261,7 +261,8 @@ export class PstService {
 }
 
 async function attachmentData(att: ContentAttachment): Promise<Buffer> {
-  if (att.source === 'pstMessage') return buildEml(await openAttachedMessage(att))
+  // Outlook items attached to PST or .msg messages are converted to .eml.
+  if (att.source === 'pstMessage' || att.source === 'msgMessage') return buildEml(await openAttachedMessage(att))
   return att.read()
 }
 

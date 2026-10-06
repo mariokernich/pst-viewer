@@ -90,7 +90,17 @@ beforeAll(async () => {
       body: 'Ergebnisse der Besprechung vom Montag.',
       html: '<p>Ergebnisse der <b>Besprechung</b> vom Montag.</p>',
       date: new Date('2025-04-07T08:30:00Z'),
-      attachments: [{ filename: 'notizen.txt', content: Buffer.from('Notizen'), mimeType: 'text/plain' }]
+      attachments: [{ filename: 'notizen.txt', content: Buffer.from('Notizen'), mimeType: 'text/plain' }],
+      messages: [
+        {
+          subject: 'Agenda',
+          senderName: 'Gina',
+          senderEmail: 'gina@example.com',
+          to: [{ name: 'Frank Fischer', email: 'frank@example.com' }],
+          body: 'Punkte für Montag.',
+          date: new Date('2025-04-04T12:00:00Z')
+        }
+      ]
     })
   )
 
@@ -197,14 +207,27 @@ describe('MSG files', () => {
     const detail = await service.handle('message', { id: item.id })
     expect(detail.recipients).toEqual([{ name: 'Gina', email: 'gina@example.com', type: 'to' }])
     expect(detail.html).toContain('<b>Besprechung</b>')
-    expect(detail.attachments.map((a) => a.name)).toEqual(['notizen.txt'])
+    expect(detail.attachments.map((a) => [a.name, a.isMessage])).toEqual([
+      ['notizen.txt', false],
+      ['Agenda', true]
+    ])
+
+    // Attached Outlook items open in place and are saved as .eml.
+    const attached = await service.handle('message', { id: item.id, path: [1] })
+    expect(attached.subject).toBe('Agenda')
+    expect(attached.text).toContain('Punkte für Montag.')
+    const savedMessage = join(dir, 'agenda.eml')
+    await service.handle('saveAttachment', { ref: { id: item.id }, index: 1, targetPath: savedMessage })
+    const agenda = await PostalMime.parse(readFileSync(savedMessage))
+    expect(agenda.subject).toBe('Agenda')
+    expect(agenda.text).toContain('Punkte für Montag.')
 
     const target = join(dir, 'memo.eml')
     await service.handle('exportEml', { ref: { id: item.id }, targetPath: target })
     const parsed = await PostalMime.parse(readFileSync(target))
     expect(parsed.subject).toBe('Protokoll Besprechung')
     expect(parsed.from?.address).toBe('frank@example.com')
-    expect(parsed.attachments.map((a) => a.filename)).toEqual(['notizen.txt'])
+    expect(parsed.attachments.map((a) => a.filename)).toEqual(['notizen.txt', 'Agenda.eml'])
 
     const saved = join(dir, 'notizen-copy.txt')
     await service.handle('saveAttachment', { ref: { id: item.id }, index: 0, targetPath: saved })
