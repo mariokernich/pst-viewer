@@ -144,6 +144,8 @@ where
     message: Rc<Pst::Message>,
     properties: AttachmentProperties,
     data: Option<AttachmentData>,
+    /// PATCH(pst-viewer): the attached message with its concrete type.
+    embedded: Option<Rc<Pst::Message>>,
 }
 
 impl<Pst> AttachmentInner<Pst>
@@ -188,6 +190,18 @@ where
         sub_node: NodeId,
         prop_ids: Option<&[u16]>,
     ) -> io::Result<Self> {
+        Self::read_with(message, sub_node, prop_ids, true)
+    }
+
+    /// PATCH(pst-viewer): `with_data == false` skips the attachment data
+    /// (`PidTagAttachDataBinary`/`PidTagAttachDataObject`), so that file names,
+    /// sizes and types can be listed without loading the content.
+    fn read_with(
+        message: Rc<<Pst as PstFile>::Message>,
+        sub_node: NodeId,
+        prop_ids: Option<&[u16]>,
+        with_data: bool,
+    ) -> io::Result<Self> {
         let node_id_type = sub_node.id_type()?;
         match node_id_type {
             NodeIdType::Attachment => {}
@@ -201,7 +215,7 @@ where
         let header = pst.header();
         let root = header.root();
 
-        let (properties, data) = {
+        let (properties, data, embedded) = 'read: {
             let mut file = pst
                 .reader()
                 .lock()
@@ -243,6 +257,7 @@ where
             let properties = prop_context
                 .properties()?
                 .into_iter()
+                .filter(|(prop_id, _)| with_data || *prop_id != 0x3701)
                 .map(|(prop_id, record)| {
                     prop_context
                         .read_property(file, encoding, &block_btree, &mut page_cache, record)
@@ -250,7 +265,11 @@ where
                 })
                 .collect::<io::Result<BTreeMap<_, _>>>()?;
             let properties = AttachmentProperties { properties };
+            if !with_data {
+                break 'read (properties, None, None);
+            }
 
+            let mut embedded = None;
             let attachment_method = AttachmentMethod::try_from(properties.attachment_method()?)?;
             let data = match attachment_method {
                 AttachmentMethod::ByValue => {
@@ -299,6 +318,7 @@ where
                             node,
                             prop_ids,
                         )?;
+                    embedded = Some(message.clone());
                     Some(AttachmentData::Message(message))
                 }
                 AttachmentMethod::Storage => {
@@ -337,13 +357,14 @@ where
                 _ => None,
             };
 
-            (properties, data)
+            (properties, data, embedded)
         };
 
         Ok(Self {
             message,
             properties,
             data,
+            embedded,
         })
     }
 }
@@ -359,6 +380,18 @@ impl UnicodeAttachment {
         prop_ids: Option<&[u16]>,
     ) -> io::Result<Rc<Self>> {
         <Self as AttachmentReadWrite<UnicodePstFile>>::read(message, sub_node, prop_ids)
+    }
+
+    /// PATCH(pst-viewer): reads the attachment's properties without its data.
+    pub fn read_metadata(message: Rc<UnicodeMessage>, sub_node: NodeId) -> io::Result<Rc<Self>> {
+        let inner = AttachmentInner::read_with(message, sub_node, None, false)?;
+        Ok(Rc::new(Self { inner }))
+    }
+
+    /// PATCH(pst-viewer): the attached message with its concrete type, so that
+    /// its own attachments can be read.
+    pub fn embedded_message(&self) -> Option<Rc<UnicodeMessage>> {
+        self.inner.embedded.clone()
     }
 }
 
@@ -398,6 +431,18 @@ impl AnsiAttachment {
         prop_ids: Option<&[u16]>,
     ) -> io::Result<Rc<Self>> {
         <Self as AttachmentReadWrite<AnsiPstFile>>::read(message, sub_node, prop_ids)
+    }
+
+    /// PATCH(pst-viewer): reads the attachment's properties without its data.
+    pub fn read_metadata(message: Rc<AnsiMessage>, sub_node: NodeId) -> io::Result<Rc<Self>> {
+        let inner = AttachmentInner::read_with(message, sub_node, None, false)?;
+        Ok(Rc::new(Self { inner }))
+    }
+
+    /// PATCH(pst-viewer): the attached message with its concrete type, so that
+    /// its own attachments can be read.
+    pub fn embedded_message(&self) -> Option<Rc<AnsiMessage>> {
+        self.inner.embedded.clone()
     }
 }
 

@@ -253,9 +253,10 @@ where
                 *root.block_btree(),
             )?;
 
-            let sub_node = node
-                .sub_node()
-                .ok_or(MessagingError::MessageSubNodeTreeNotFound)?;
+            // PATCH(pst-viewer): messages without recipients and attachments may
+            // have no sub-node tree; they are read with empty tables instead of
+            // failing with MessageSubNodeTreeNotFound.
+            let sub_node = node.sub_node();
 
             let mut page_cache = pst.block_cache();
             let data = node.data();
@@ -282,12 +283,18 @@ where
                 .collect::<io::Result<BTreeMap<_, _>>>()?;
             let properties = MessageProperties { properties };
 
-            let block = block_btree.find_entry(file, sub_node.search_key(), &mut page_cache)?;
-            let sub_nodes = SubNodeTree::<Pst>::read(file, &block)?;
-            let sub_nodes: BTreeMap<_, _> = sub_nodes
-                .entries(file, &block_btree, &mut page_cache)?
-                .map(|entry| (entry.node(), entry))
-                .collect();
+            let sub_nodes: BTreeMap<_, _> = match sub_node {
+                Some(sub_node) => {
+                    let block =
+                        block_btree.find_entry(file, sub_node.search_key(), &mut page_cache)?;
+                    let sub_nodes = SubNodeTree::<Pst>::read(file, &block)?;
+                    sub_nodes
+                        .entries(file, &block_btree, &mut page_cache)?
+                        .map(|entry| (entry.node(), entry))
+                        .collect()
+                }
+                None => BTreeMap::new(),
+            };
 
             (properties, sub_nodes)
         };
