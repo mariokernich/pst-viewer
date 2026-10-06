@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { rename, stat, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import type { LanguageSetting, RecentFile, ThemeSource } from '../shared/types'
+import { isAccessError, isSandboxed, withAccess } from './sandbox'
 
 /**
  * Small JSON backed persistence for app settings and the recent files list.
@@ -12,7 +13,12 @@ interface Settings {
   windowBounds?: { x?: number; y?: number; width: number; height: number; maximized?: boolean }
   themeSource?: ThemeSource
   language?: LanguageSetting
-  recentFiles?: Omit<RecentFile, 'exists' | 'isFolder'>[]
+  recentFiles?: StoredRecentFile[]
+}
+
+type StoredRecentFile = Omit<RecentFile, 'exists' | 'isFolder'> & {
+  /** Security-scoped bookmark (base64) of Mac App Store builds. */
+  bookmark?: string
 }
 
 const MAX_RECENT = 12
@@ -57,20 +63,30 @@ export function settings(): JsonStore {
 export async function listRecentFiles(): Promise<RecentFile[]> {
   const entries = settings().get('recentFiles') ?? []
   return Promise.all(
-    entries.map(async (entry) => {
+    entries.map(async ({ bookmark, ...entry }) => {
       try {
-        const s = await stat(entry.path)
+        const s = await withAccess(entry.path, bookmark, () => stat(entry.path))
         return { ...entry, size: s.isFile() ? s.size : entry.size, exists: s.isFile() || s.isDirectory(), isFolder: s.isDirectory() }
-      } catch {
+      } catch (err) {
+        // Without a bookmark the sandbox hides the file; opening asks for access again.
+        if (isSandboxed && isAccessError(err)) return { ...entry, exists: true, isFolder: false }
         return { ...entry, exists: false, isFolder: false }
       }
     })
   )
 }
 
-export function addRecentFile(path: string, size: number, itemCount: number | null): void {
-  const entries = (settings().get('recentFiles') ?? []).filter((e) => e.path !== path)
-  entries.unshift({ path, name: basename(path), size, itemCount, lastOpened: Date.now() })
+export function recentBookmark(path: string): string | undefined {
+  return settings()
+    .get('recentFiles')
+    ?.find((e) => e.path === path)?.bookmark
+}
+
+export function addRecentFile(path: string, size: number, itemCount: number | null, bookmark?: string): void {
+  const all = settings().get('recentFiles') ?? []
+  const previous = all.find((e) => e.path === path)
+  const entries = all.filter((e) => e.path !== path)
+  entries.unshift({ path, name: basename(path), size, itemCount, lastOpened: Date.now(), bookmark: bookmark ?? previous?.bookmark })
   settings().set('recentFiles', entries.slice(0, MAX_RECENT))
   if (process.platform !== 'linux') app.addRecentDocument(path)
 }

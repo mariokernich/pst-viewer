@@ -11,7 +11,8 @@ files:
   - package.json
   - '!**/*.map'
 
-# Double-clicking a mail file opens it in the viewer (read-only, never as editor).
+# Mail files can be opened in the viewer (read-only, never as editor). Only
+# .pst is claimed as default; mail apps stay the default for the others.
 fileAssociations:
   - ext: pst
     name: Outlook Data File
@@ -22,16 +23,19 @@ fileAssociations:
     name: Outlook Item
     description: Outlook Item
     role: Viewer
+    rank: Alternate
     icon: build/icon.png
-  - ext: eml
+  - ext: [eml, emlx]
     name: Email Message
     description: Email Message
     role: Viewer
+    rank: Alternate
     icon: build/icon.png
   - ext: mbox
     name: Mailbox
     description: Mailbox (MBOX)
     role: Viewer
+    rank: Alternate
     icon: build/icon.png
 
 # Harden the packaged app (https://www.electronjs.org/docs/latest/tutorial/fuses).
@@ -59,11 +63,37 @@ mac:
 dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
 
+# Mac App Store: `APPLE_TEAM_ID=… pnpm dist:mas` (scripts/dist-mas.cjs adds the
+# team id, see docs/store-release.md). The app runs in the App Sandbox; recent
+# files are reopened through security-scoped bookmarks (src/main/sandbox.ts).
+mas:
+  type: distribution
+  hardenedRuntime: false
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+  provisioningProfile: build/embedded.provisionprofile
+  extendInfo:
+    ITSAppUsesNonExemptEncryption: false
+
 win:
   icon: build/icon.png
   target:
     - target: nsis
       arch: [x64, arm64]
+
+# Microsoft Store (MSIX/AppX), built on Windows: `pnpm dist:appx`
+# (scripts/dist-appx.cjs adds identity name and publisher from Partner Center,
+# see docs/store-release.md). The logos in build/appx are rendered with
+# `pnpm store-assets`.
+appx:
+  publisherDisplayName: Mario Kernich
+  applicationId: PSTViewer
+  displayName: PST Viewer
+  backgroundColor: transparent
+  showNameOnTiles: false
+  languages:
+    - de-DE
+    - en-US
 
 nsis:
   oneClick: false

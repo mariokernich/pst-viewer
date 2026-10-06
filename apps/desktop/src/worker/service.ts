@@ -1,5 +1,4 @@
-import { open, writeFile } from 'node:fs/promises'
-import { join, parse } from 'node:path'
+import { open } from 'node:fs/promises'
 import type {
   AttachmentFileInfo,
   IndexProgress,
@@ -8,7 +7,6 @@ import type {
   OpenProgress,
   OpenResult,
   PstErrorCode,
-  SaveResult,
   SearchRequest,
   SearchResponse
 } from '../shared/types'
@@ -22,7 +20,7 @@ import type { Archive, IndexedItem } from './archive'
 import { PstError, PstIndex } from './indexer'
 import { LocalArchive } from './localArchive'
 import { runSearch, type SearchOutcome } from './search'
-import type { WorkerMethod, WorkerRequests } from './protocol'
+import type { AttachmentData, WorkerMethod, WorkerRequests } from './protocol'
 
 export class ServiceError extends Error {
   constructor(
@@ -66,10 +64,10 @@ export class PstService {
       search: (a) => this.search(a),
       page: (a) => this.page(a.token, a.offset, a.limit),
       message: (a) => getMessageDetail(this.requireIndex(), a),
-      saveAttachment: (a) => this.saveAttachment(a.ref, a.index, a.targetPath),
-      saveAttachments: (a) => this.saveAttachments(a.ref, a.directory),
       attachmentInfo: (a) => this.attachmentInfo(a.ref, a.index),
-      exportEml: (a) => this.exportEml(a.ref, a.targetPath)
+      attachmentData: (a) => this.attachmentData(a.ref, a.index),
+      attachmentFiles: (a) => this.attachmentFiles(a),
+      emlData: async (a) => buildEml(await this.requireIndex().resolve(a))
     }
     try {
       return await (handlers[method] as (a: WorkerRequests[M]['args']) => Promise<WorkerRequests[M]['result']>)(args)
@@ -215,48 +213,24 @@ export class PstService {
     return { fileName: fileNameOf(att), mimeType: att.mimeType, size: att.size, isMessage: att.isMessage }
   }
 
-  /** Writes an attachment to disk; attached messages are written as .eml. */
-  private async saveAttachment(ref: MessageRef, index: number, targetPath: string): Promise<SaveResult> {
+  /** An attachment's bytes; attached messages as .eml. */
+  private async attachmentData(ref: MessageRef, index: number): Promise<Buffer> {
     const { content } = await this.requireIndex().resolve(ref)
     const att = content.attachments[index]
     if (!att) throw new ServiceError('NOT_FOUND', 'Attachment not found')
-    await writeFile(targetPath, await attachmentData(att))
-    return { status: 'saved', path: targetPath, count: 1 }
+    return attachmentData(att)
   }
 
-  private async saveAttachments(ref: MessageRef, directory: string): Promise<SaveResult> {
+  /** Same selection as shown in the attachment bar: no hidden or inline parts. */
+  private async attachmentFiles(ref: MessageRef): Promise<AttachmentData[]> {
     const { content } = await this.requireIndex().resolve(ref)
     const cids = referencedContentIds(content.html)
-    let count = 0
-    const used = new Set<string>()
+    const files: AttachmentData[] = []
     for (const att of content.attachments) {
-      // Same selection as shown in the attachment bar: no hidden or inline parts.
       if (att.hidden || (att.contentId !== '' && cids.has(att.contentId))) continue
-      const data = await attachmentData(att)
-      const name = fileNameOf(att)
-      const { name: stem, ext } = parse(name)
-      for (let n = 0; n < 1000; n++) {
-        const candidate = n === 0 ? name : `${stem} (${n})${ext}`
-        if (used.has(candidate.toLowerCase())) continue
-        try {
-          // 'wx' never overwrites existing files in the target folder.
-          await writeFile(join(directory, candidate), data, { flag: 'wx' })
-          used.add(candidate.toLowerCase())
-          count++
-          break
-        } catch (err) {
-          if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err
-        }
-      }
+      files.push({ fileName: fileNameOf(att), data: await attachmentData(att) })
     }
-    return { status: 'saved', path: directory, count }
-  }
-
-  /** Exports a message as .eml (RFC 5322 / MIME). */
-  private async exportEml(ref: MessageRef, targetPath: string): Promise<SaveResult> {
-    const resolved = await this.requireIndex().resolve(ref)
-    await writeFile(targetPath, await buildEml(resolved))
-    return { status: 'saved', path: targetPath, count: 1 }
+    return files
   }
 }
 

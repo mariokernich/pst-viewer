@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import PostalMime from 'postal-mime'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -88,10 +88,9 @@ run('PstService', () => {
     expect(detail.bodyFormat).not.toBe('none')
     const visible = detail.attachments.filter((a) => !a.isInline)
     expect(visible.length).toBe(item!.attachmentCount)
-    const dir = mkdtempSync(join(tmp, 'all-'))
-    const saved = await service.handle('saveAttachments', { ref: { id: item!.id }, directory: dir })
-    expect(saved.count).toBe(visible.length)
-    expect(readdirSync(dir).length).toBe(visible.length)
+    const files = await service.handle('attachmentFiles', { id: item!.id })
+    expect(files.length).toBe(visible.length)
+    expect(files.every((f) => f.data.length > 0 || visible.some((a) => a.size === 0))).toBe(true)
   })
 
   it('opens attached messages', async () => {
@@ -113,9 +112,7 @@ run('PstService', () => {
     const res = await service.handle('search', request({ text: 'hat:anhang', pageSize: 50 }))
     const item = res.items.find((i) => i.kind === 'mail') ?? res.items[0]
     const detail = await service.handle('message', { id: item.id })
-    const target = join(tmp, 'export.eml')
-    await service.handle('exportEml', { ref: { id: item.id }, targetPath: target })
-    const parsed = await PostalMime.parse(readFileSync(target))
+    const parsed = await PostalMime.parse(await service.handle('emlData', { id: item.id }))
     expect(parsed.subject ?? '').toBe(detail.subject)
     expect(parsed.from?.address ?? '').toBe(detail.from.email)
     const visible = detail.attachments.filter((a) => !a.isInline)
@@ -131,9 +128,7 @@ run('PstService', () => {
       if (index < 0) continue
       const info = await service.handle('attachmentInfo', { ref: { id: item.id }, index })
       expect(info.fileName.endsWith('.eml')).toBe(true)
-      const target = join(tmp, info.fileName)
-      await service.handle('saveAttachment', { ref: { id: item.id }, index, targetPath: target })
-      const parsed = await PostalMime.parse(readFileSync(target))
+      const parsed = await PostalMime.parse(await service.handle('attachmentData', { ref: { id: item.id }, index }))
       const embedded = await service.handle('message', { id: item.id, path: [index] })
       expect(parsed.subject ?? '').toBe(embedded.subject)
       return

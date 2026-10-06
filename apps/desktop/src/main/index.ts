@@ -14,7 +14,7 @@ import {
   type MenuItemConstructorOptions
 } from 'electron'
 import { stat, writeFile } from 'node:fs/promises'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, parse } from 'node:path'
 import type {
   AppInfo,
   AttachmentPreview,
@@ -44,7 +44,9 @@ import {
 import { printDocument, removeExportFiles, renderPdf } from './exporter'
 import { formatLocale, setLanguageSetting, t, uiLocale } from './i18n'
 import { buildMenu } from './menu'
-import { addRecentFile, clearRecentFiles, listRecentFiles, removeRecentFile, settings } from './store'
+import { isAccessError, isSandboxed, startAccess, stopAccess } from './sandbox'
+import { addRecentFile, clearRecentFiles, listRecentFiles, recentBookmark, removeRecentFile, settings } from './store'
+import type { AttachmentData } from '../worker/protocol'
 import { PstWorkerClient, WorkerError } from './workerClient'
 
 const DEV_URL = process.env.ELECTRON_RENDERER_URL
@@ -58,6 +60,9 @@ let pendingPath: string | null = null
 let allowRemoteImages = false
 /** Paths the renderer may reveal in Finder/Explorer. */
 const revealablePaths = new Set<string>()
+/** Mac App Store: bookmarks of files picked in the open dialog, and the path being accessed. */
+const grantedBookmarks = new Map<string, string>()
+let accessedPath: string | null = null
 
 const worker = new PstWorkerClient({
   onProgress: (progress) => mainWindow?.webContents.send('pst:progress', progress),
@@ -419,8 +424,53 @@ async function copyOfAttachment(messageRef: MessageRef, index: number): ReturnTy
   const info = await worker.request('attachmentInfo', { ref: messageRef, index })
   const key = `${currentFile}|${messageRef.id}/${(messageRef.path ?? []).join('/')}|${index}`
   return attachmentCopy(key, info, async (targetPath) => {
-    await worker.request('saveAttachment', { ref: messageRef, index, targetPath })
+    await writeFile(targetPath, await worker.request('attachmentData', { ref: messageRef, index }))
   })
+}
+
+async function fileSize(path: string): Promise<number> {
+  const s = await stat(path)
+  if (!s.isFile() && !s.isDirectory()) throw new Error('Not a file or folder')
+  return s.size
+}
+
+/** Mac App Store: asks the user to confirm a file again, which grants access and a bookmark. */
+async function askForAccess(path: string): Promise<{ path: string; bookmark?: string } | null> {
+  const s = t()
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: s.grantAccessTitle,
+    message: s.grantAccessMessage,
+    buttonLabel: s.openDialogButton,
+    defaultPath: path,
+    properties: ['openFile', 'openDirectory'],
+    securityScopedBookmarks: true
+  })
+  const chosen = result.filePaths[0]
+  if (result.canceled || !chosen) return null
+  return { path: chosen, bookmark: result.bookmarks?.[0] }
+}
+
+/** Writes files into a folder without overwriting existing ones ("name (1).ext"). */
+async function writeIntoFolder(directory: string, files: AttachmentData[]): Promise<number> {
+  let count = 0
+  const used = new Set<string>()
+  for (const file of files) {
+    const { name: stem, ext } = parse(file.fileName)
+    for (let n = 0; n < 1000; n++) {
+      const candidate = n === 0 ? file.fileName : `${stem} (${n})${ext}`
+      if (used.has(candidate.toLowerCase())) continue
+      try {
+        // 'wx' never overwrites existing files in the target folder.
+        await writeFile(join(directory, candidate), file.data, { flag: 'wx' })
+        used.add(candidate.toLowerCase())
+        count++
+        break
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err
+      }
+    }
+  }
+  return count
 }
 
 let lastExportDirectory: string | null = null
@@ -499,28 +549,43 @@ function registerIpc(): void {
         : [
             { name: s.mailFilter, extensions: MAIL_EXTENSIONS },
             { name: s.allFiles, extensions: ['*'] }
-          ]
+          ],
+      securityScopedBookmarks: isSandboxed
     })
-    return result.canceled ? null : (result.filePaths[0] ?? null)
+    const path = result.canceled ? null : (result.filePaths[0] ?? null)
+    const bookmark = result.bookmarks?.[0]
+    if (path && bookmark) grantedBookmarks.set(path, bookmark)
+    return path
   })
 
   handle('pst:open', async (path: unknown) => {
-    const filePath = str(path, 'path')
+    let filePath = str(path, 'path')
+    let bookmark = grantedBookmarks.get(filePath) ?? recentBookmark(filePath)
     let size = 0
     try {
-      const s = await stat(filePath)
-      if (!s.isFile() && !s.isDirectory()) throw new Error()
-      size = s.size
-    } catch {
-      throw new WorkerError('NOT_FOUND', filePath)
+      startAccess(filePath, bookmark)
+      size = await fileSize(filePath)
+    } catch (err) {
+      if (!isSandboxed || !isAccessError(err)) throw new WorkerError('NOT_FOUND', filePath)
+      // The sandbox needs the user's consent again (e.g. for files dropped onto the window).
+      const granted = await askForAccess(filePath)
+      if (!granted) throw new WorkerError('CANCELED', filePath)
+      filePath = granted.path
+      bookmark = granted.bookmark
+      startAccess(filePath, bookmark)
+      size = await fileSize(filePath).catch(() => {
+        throw new WorkerError('NOT_FOUND', filePath)
+      })
     }
+    if (accessedPath !== filePath) stopAccess(accessedPath)
+    accessedPath = filePath
     setCurrentFile(null)
     allowRemoteImages = false
     resetAttachmentCopies()
     await worker.restart()
     try {
       const result = await worker.request('open', { path: filePath })
-      addRecentFile(filePath, result.store.fileSize || size, result.store.itemCount)
+      addRecentFile(filePath, result.store.fileSize || size, result.store.itemCount, bookmark)
       revealablePaths.add(filePath)
       setCurrentFile(filePath)
       return result
@@ -538,6 +603,8 @@ function registerIpc(): void {
   handle('pst:close', () => {
     resetAttachmentCopies()
     worker.stop()
+    stopAccess(accessedPath)
+    accessedPath = null
     allowRemoteImages = false
     setCurrentFile(null)
   })
@@ -560,9 +627,9 @@ function registerIpc(): void {
       properties: ['createDirectory', 'showOverwriteConfirmation']
     })
     if (result.canceled || !result.filePath) return { status: 'canceled' }
-    const saved = await worker.request('saveAttachment', { ref: messageRef, index: attachmentIndex, targetPath: result.filePath })
+    await writeFile(result.filePath, await worker.request('attachmentData', { ref: messageRef, index: attachmentIndex }))
     revealablePaths.add(result.filePath)
-    return saved
+    return { status: 'saved', path: result.filePath, count: 1 }
   })
 
   handle('pst:previewAttachment', async (r: unknown, index: unknown): Promise<AttachmentPreview> => {
@@ -588,9 +655,9 @@ function registerIpc(): void {
     const messageRef = ref(r)
     const target = await askExportPath(str(name, 'name'), 'eml')
     if (!target) return { status: 'canceled' }
-    const saved = await worker.request('exportEml', { ref: messageRef, targetPath: target })
+    await writeFile(target, await worker.request('emlData', messageRef))
     revealablePaths.add(target)
-    return saved
+    return { status: 'saved', path: target, count: 1 }
   })
 
   handle('export:document', async (doc: unknown): Promise<SaveResult> => {
@@ -622,9 +689,9 @@ function registerIpc(): void {
     })
     const directory = result.filePaths[0]
     if (result.canceled || !directory) return { status: 'canceled' }
-    const saved = await worker.request('saveAttachments', { ref: messageRef, directory })
+    const count = await writeIntoFolder(directory, await worker.request('attachmentFiles', messageRef))
     revealablePaths.add(directory)
-    return saved
+    return { status: 'saved', path: directory, count }
   })
 
   handle('recent:list', async () => {

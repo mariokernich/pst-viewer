@@ -7,7 +7,6 @@ import type {
   OpenProgress,
   OpenResult,
   PstErrorCode,
-  SaveResult,
   SearchRequest,
   SearchResponse
 } from '../shared/types'
@@ -18,10 +17,22 @@ export interface WorkerRequests {
   search: { args: SearchRequest; result: SearchResponse }
   page: { args: { token: number; offset: number; limit: number }; result: MessageSummary[] | null }
   message: { args: MessageRef; result: MessageDetail }
-  saveAttachment: { args: { ref: MessageRef; index: number; targetPath: string }; result: SaveResult }
-  saveAttachments: { args: { ref: MessageRef; directory: string }; result: SaveResult }
   attachmentInfo: { args: { ref: MessageRef; index: number }; result: AttachmentFileInfo }
-  exportEml: { args: { ref: MessageRef; targetPath: string }; result: SaveResult }
+  /** An attachment's bytes; attached messages as .eml. */
+  attachmentData: { args: { ref: MessageRef; index: number }; result: Uint8Array }
+  /** The visible attachments of a message as files (no hidden or inline parts). */
+  attachmentFiles: { args: MessageRef; result: AttachmentData[] }
+  /** The message as .eml (RFC 5322 / MIME). */
+  emlData: { args: MessageRef; result: Uint8Array }
+}
+
+/**
+ * The worker never writes files: the main process writes what the user saves,
+ * so the process that reads the archives needs no write access at all.
+ */
+export interface AttachmentData {
+  fileName: string
+  data: Uint8Array
 }
 
 export type WorkerMethod = keyof WorkerRequests

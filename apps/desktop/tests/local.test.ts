@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import PostalMime from 'postal-mime'
@@ -140,9 +140,8 @@ describe('EML files', () => {
     expect(detail.attachments.filter((a) => !a.isInline).map((a) => a.name)).toEqual(['rechnung.pdf'])
 
     // .eml exports keep the original message unchanged.
-    const target = join(dir, 'export.eml')
-    await service.handle('exportEml', { ref: { id: item.id }, targetPath: target })
-    expect(readFileSync(target).equals(invoiceEml)).toBe(true)
+    const eml = await service.handle('emlData', { id: item.id })
+    expect(Buffer.from(eml).equals(invoiceEml)).toBe(true)
     service.close()
   })
 })
@@ -216,22 +215,19 @@ describe('MSG files', () => {
     const attached = await service.handle('message', { id: item.id, path: [1] })
     expect(attached.subject).toBe('Agenda')
     expect(attached.text).toContain('Punkte für Montag.')
-    const savedMessage = join(dir, 'agenda.eml')
-    await service.handle('saveAttachment', { ref: { id: item.id }, index: 1, targetPath: savedMessage })
-    const agenda = await PostalMime.parse(readFileSync(savedMessage))
+    const agenda = await PostalMime.parse(await service.handle('attachmentData', { ref: { id: item.id }, index: 1 }))
     expect(agenda.subject).toBe('Agenda')
     expect(agenda.text).toContain('Punkte für Montag.')
 
-    const target = join(dir, 'memo.eml')
-    await service.handle('exportEml', { ref: { id: item.id }, targetPath: target })
-    const parsed = await PostalMime.parse(readFileSync(target))
+    const parsed = await PostalMime.parse(await service.handle('emlData', { id: item.id }))
     expect(parsed.subject).toBe('Protokoll Besprechung')
     expect(parsed.from?.address).toBe('frank@example.com')
     expect(parsed.attachments.map((a) => a.filename)).toEqual(['notizen.txt', 'Agenda.eml'])
 
-    const saved = join(dir, 'notizen-copy.txt')
-    await service.handle('saveAttachment', { ref: { id: item.id }, index: 0, targetPath: saved })
-    expect(readFileSync(saved, 'utf8')).toBe('Notizen')
+    const notes = await service.handle('attachmentData', { ref: { id: item.id }, index: 0 })
+    expect(Buffer.from(notes).toString('utf8')).toBe('Notizen')
+    const files = await service.handle('attachmentFiles', { id: item.id })
+    expect(files.map((f) => f.fileName)).toEqual(['notizen.txt', 'Agenda.eml'])
     service.close()
   })
 })
@@ -281,9 +277,8 @@ describe('Folders of mail files', () => {
     expect(detail.text).not.toContain('plist')
 
     // The .eml export is the message without the Apple Mail wrapper.
-    const target = join(dir, 'wichtig.eml')
-    await service.handle('exportEml', { ref: { id: all.items[1].id }, targetPath: target })
-    expect(readFileSync(target).equals(important)).toBe(true)
+    const eml = await service.handle('emlData', { id: all.items[1].id })
+    expect(Buffer.from(eml).equals(important)).toBe(true)
     service.close()
   })
 

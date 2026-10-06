@@ -18,6 +18,9 @@
     "dist:mac": "pnpm run build && electron-builder --mac",
     "dist:win": "pnpm run build && electron-builder --win",
     "dist:linux": "pnpm run build && electron-builder --linux",
+    "dist:mas": "pnpm run build && node scripts/dist-mas.cjs",
+    "dist:appx": "pnpm run build && node scripts/dist-appx.cjs",
+    "store-assets": "electron scripts/render-store-assets.cjs",
     "icons": "electron scripts/render-icon.cjs"
   },
   "dependencies": {
