@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises'
+import { open, writeFile } from 'node:fs/promises'
 import { join, parse } from 'node:path'
 import type {
   AttachmentFileInfo,
@@ -15,10 +15,12 @@ import type {
 import { makeSnippet } from '../shared/text'
 import { sanitizeFileName } from '../shared/files'
 import type { ContentAttachment } from './content'
-import { getMessageDetail, NotFoundError, openAttachedMessage, resolveMessage } from './details'
+import { getMessageDetail, NotFoundError, openAttachedMessage } from './details'
 import { buildEml } from './eml'
 import { referencedContentIds } from './html'
-import { PstError, PstIndex, type IndexedItem } from './indexer'
+import type { Archive, IndexedItem } from './archive'
+import { PstError, PstIndex } from './indexer'
+import { LocalArchive } from './localArchive'
 import { runSearch, type SearchOutcome } from './search'
 import type { WorkerMethod, WorkerRequests } from './protocol'
 
@@ -40,7 +42,7 @@ export type ServiceEvent = { type: 'progress'; progress: OpenProgress } | { type
  * the currently open file and the most recent search result.
  */
 export class PstService {
-  private index: PstIndex | null = null
+  private index: Archive | null = null
   private canceled = false
   private result: (SearchOutcome & { token: number }) | null = null
   private nextToken = 1
@@ -87,7 +89,7 @@ export class PstService {
     this.textCache.clear()
   }
 
-  private requireIndex(): PstIndex {
+  private requireIndex(): Archive {
     if (!this.index) throw new ServiceError('NOT_OPEN', 'No file is open')
     return this.index
   }
@@ -95,10 +97,11 @@ export class PstService {
   private async open(path: string): Promise<OpenResult> {
     this.close()
     this.canceled = false
-    const index = await PstIndex.open(path, {
-      onProgress: (progress) => this.emit({ type: 'progress', progress }),
+    const options = {
+      onProgress: (progress: OpenProgress) => this.emit({ type: 'progress', progress }),
       isCanceled: () => this.canceled
-    })
+    }
+    const index: Archive = (await isPstFile(path)) ? await PstIndex.open(path, options) : await LocalArchive.open(path, options)
     this.index = index
     if (!index.contentIndexed) {
       const inbox = index.folders.find((f) => f.special === 'inbox')
@@ -192,7 +195,7 @@ export class PstService {
       return cached
     }
     try {
-      const { content } = await resolveMessage(this.requireIndex().pst, { id })
+      const { content } = await this.requireIndex().resolve({ id })
       const text = content.text.replace(/\s+/g, ' ').trim()
       this.textCache.set(id, text)
       if (this.textCache.size > TEXT_CACHE_SIZE) {
@@ -206,7 +209,7 @@ export class PstService {
   }
 
   private async attachmentInfo(ref: MessageRef, index: number): Promise<AttachmentFileInfo> {
-    const { content } = await resolveMessage(this.requireIndex().pst, ref)
+    const { content } = await this.requireIndex().resolve(ref)
     const att = content.attachments[index]
     if (!att) throw new ServiceError('NOT_FOUND', 'Attachment not found')
     return { fileName: fileNameOf(att), mimeType: att.mimeType, size: att.size, isMessage: att.isMessage }
@@ -214,7 +217,7 @@ export class PstService {
 
   /** Writes an attachment to disk; attached messages are written as .eml. */
   private async saveAttachment(ref: MessageRef, index: number, targetPath: string): Promise<SaveResult> {
-    const { content } = await resolveMessage(this.requireIndex().pst, ref)
+    const { content } = await this.requireIndex().resolve(ref)
     const att = content.attachments[index]
     if (!att) throw new ServiceError('NOT_FOUND', 'Attachment not found')
     await writeFile(targetPath, await attachmentData(att))
@@ -222,7 +225,7 @@ export class PstService {
   }
 
   private async saveAttachments(ref: MessageRef, directory: string): Promise<SaveResult> {
-    const { content } = await resolveMessage(this.requireIndex().pst, ref)
+    const { content } = await this.requireIndex().resolve(ref)
     const cids = referencedContentIds(content.html)
     let count = 0
     const used = new Set<string>()
@@ -251,7 +254,7 @@ export class PstService {
 
   /** Exports a message as .eml (RFC 5322 / MIME). */
   private async exportEml(ref: MessageRef, targetPath: string): Promise<SaveResult> {
-    const resolved = await resolveMessage(this.requireIndex().pst, ref)
+    const resolved = await this.requireIndex().resolve(ref)
     await writeFile(targetPath, await buildEml(resolved))
     return { status: 'saved', path: targetPath, count: 1 }
   }
@@ -265,4 +268,21 @@ async function attachmentData(att: ContentAttachment): Promise<Buffer> {
 function fileNameOf(att: ContentAttachment): string {
   const name = sanitizeFileName(att.name)
   return att.isMessage && !/\.eml$/i.test(name) ? `${name}.eml` : name
+}
+
+/** PST and OST files start with the signature "!BDN". */
+async function isPstFile(path: string): Promise<boolean> {
+  try {
+    const handle = await open(path, 'r')
+    try {
+      const signature = Buffer.alloc(4)
+      await handle.read(signature, 0, 4, 0)
+      return signature.toString('latin1') === '!BDN'
+    } finally {
+      await handle.close()
+    }
+  } catch {
+    // Directories and unreadable paths are handled by the local archive.
+    return false
+  }
 }

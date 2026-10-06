@@ -12,7 +12,7 @@ interface Settings {
   windowBounds?: { x?: number; y?: number; width: number; height: number; maximized?: boolean }
   themeSource?: ThemeSource
   language?: LanguageSetting
-  recentFiles?: Omit<RecentFile, 'exists'>[]
+  recentFiles?: Omit<RecentFile, 'exists' | 'isFolder'>[]
 }
 
 const MAX_RECENT = 12
@@ -60,9 +60,9 @@ export async function listRecentFiles(): Promise<RecentFile[]> {
     entries.map(async (entry) => {
       try {
         const s = await stat(entry.path)
-        return { ...entry, size: s.size, exists: s.isFile() }
+        return { ...entry, size: s.isFile() ? s.size : entry.size, exists: s.isFile() || s.isDirectory(), isFolder: s.isDirectory() }
       } catch {
-        return { ...entry, exists: false }
+        return { ...entry, exists: false, isFolder: false }
       }
     })
   )

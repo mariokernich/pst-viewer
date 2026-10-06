@@ -3,8 +3,9 @@ import type { MimeNodeAddress, MimeNodeHeader } from 'nodemailer/lib/mime-node'
 import type { PSTMessage } from './pst'
 import { safe, type MessageContent } from './content'
 import { referencedContentIds } from './html'
-import { senderOf, type Address } from './indexer'
+import { senderOf, type Address } from './pstFields'
 import { openAttachedMessage, type ResolvedMessage } from './details'
+import { msgDate, msgRecipients, msgSender } from './msg'
 
 const MAX_DEPTH = 5
 
@@ -33,20 +34,67 @@ const REBUILT_HEADERS = new Set([
 
 /**
  * Serialises a message as RFC 5322 / MIME (.eml) so that it can be opened in
- * any mail client. MIME messages are returned unchanged; PST messages are
- * rebuilt including their attachments, inline images and original headers.
+ * any mail client. MIME messages are returned unchanged; PST and .msg items
+ * are rebuilt including their attachments, inline images and original headers.
  */
 export async function buildEml(message: ResolvedMessage, depth = 0): Promise<Buffer> {
   if (message.kind === 'mime') return message.raw
-  const { msg, content } = message
+  if (message.kind === 'pst') {
+    const { msg } = message
+    const original = parseHeaders(safe(() => msg.transportMessageHeaders, ''))
+    return compose(
+      {
+        from: senderOf(msg),
+        ...recipientsByType(msg),
+        subject: safe(() => msg.subject, ''),
+        date: safe(() => msg.clientSubmitTime, null) ?? safe(() => msg.messageDeliveryTime, null),
+        messageId: safe(() => msg.internetMessageId, ''),
+        original
+      },
+      message.content,
+      depth
+    )
+  }
+  const { fields } = message
+  const recipients = msgRecipients(fields)
+  const mailbox = (r: { name: string; email: string }): MimeNodeAddress => ({ name: r.name !== r.email ? r.name : '', address: r.email })
+  const date = msgDate(fields)
+  return compose(
+    {
+      from: msgSender(fields),
+      to: recipients.filter((r) => r.type === 'to' && r.email).map(mailbox),
+      cc: recipients.filter((r) => r.type === 'cc' && r.email).map(mailbox),
+      bcc: recipients.filter((r) => r.type === 'bcc' && r.email).map(mailbox),
+      subject: fields.subject ?? '',
+      date: date ? new Date(date) : null,
+      messageId: '',
+      original: parseHeaders(fields.headers ?? '')
+    },
+    message.content,
+    depth
+  )
+}
 
+interface Envelope {
+  from: Address
+  to: MimeNodeAddress[]
+  cc: MimeNodeAddress[]
+  bcc: MimeNodeAddress[]
+  subject: string
+  date: Date | null
+  messageId: string
+  /** Original internet headers, copied except the rebuilt ones. */
+  original: { key: string; value: string }[]
+}
+
+async function compose(envelope: Envelope, content: MessageContent, depth: number): Promise<Buffer> {
   const attachments: MailComposerAttachment[] = []
   const cids = referencedContentIds(content.html)
   for (const att of content.attachments) {
     if (att.isMessage) {
       if (depth >= MAX_DEPTH) continue
       try {
-        const data = att.source === 'pstMessage' ? await buildEml(await openAttachedMessage(att), depth + 1) : att.read()
+        const data = att.source === 'mimeMessage' ? att.read() : await buildEml(await openAttachedMessage(att), depth + 1)
         const name = fileSafe(att.name) || 'message'
         attachments.push({
           filename: /\.eml$/i.test(name) ? name : `${name}.eml`,
@@ -69,23 +117,18 @@ export async function buildEml(message: ResolvedMessage, depth = 0): Promise<Buf
     })
   }
 
-  const recipients = recipientsByType(msg)
-  const from = senderOf(msg)
-  const original = parseHeaders(safe(() => msg.transportMessageHeaders, ''))
-  const messageId = (safe(() => msg.internetMessageId, '') || original.find((h) => h.key.toLowerCase() === 'message-id')?.value || '').trim()
-  const date = safe(() => msg.clientSubmitTime, null) ?? safe(() => msg.messageDeliveryTime, null) ?? undefined
-
+  const messageId = (envelope.messageId || envelope.original.find((h) => h.key.toLowerCase() === 'message-id')?.value || '').trim()
   const composer = new MailComposer({
-    from: address(from),
-    to: recipients.to,
-    cc: recipients.cc,
-    bcc: recipients.bcc,
-    subject: safe(() => msg.subject, ''),
-    date: date ?? undefined,
+    from: address(envelope.from),
+    to: envelope.to,
+    cc: envelope.cc,
+    bcc: envelope.bcc,
+    subject: envelope.subject,
+    date: envelope.date ?? undefined,
     messageId: messageId || undefined,
     ...body(content),
     attachments,
-    headers: original
+    headers: envelope.original
       .filter((h) => !REBUILT_HEADERS.has(h.key.toLowerCase()))
       .map<MimeNodeHeader>((h) => ({ key: h.key, value: { prepared: true, value: h.value } })),
     disableFileAccess: true,

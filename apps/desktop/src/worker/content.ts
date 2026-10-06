@@ -1,4 +1,5 @@
 import PostalMime, { type Email } from 'postal-mime'
+import type { MsgFile } from './msg'
 import type { PSTAttachment, PSTMessage } from './pst'
 import type { SecurityKind } from '../shared/types'
 import { loadEmbeddedMessage } from './embedded'
@@ -23,9 +24,9 @@ const ATTACH_EMBEDDED_MSG = 5
 
 /**
  * Where an attachment's content comes from: a plain file, a message embedded
- * in the PST (Outlook "item" attachment) or a MIME message (.eml).
+ * in the PST or in a .msg file (Outlook "item" attachment) or a MIME message (.eml).
  */
-export type AttachmentSource = 'file' | 'pstMessage' | 'mimeMessage'
+export type AttachmentSource = 'file' | 'pstMessage' | 'msgMessage' | 'mimeMessage'
 
 export interface ContentAttachment {
   name: string
@@ -39,6 +40,8 @@ export interface ContentAttachment {
   read(): Buffer
   /** The embedded message for source 'pstMessage'. */
   embedded(): PSTMessage | null
+  /** The embedded item for source 'msgMessage'. */
+  embeddedMsg?(): MsgFile | null
 }
 
 export interface MessageContent {

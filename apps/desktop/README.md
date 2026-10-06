@@ -1,8 +1,14 @@
 # PST Viewer
 
-A fast, modern and strictly **read-only** desktop viewer for Outlook data files (`.pst`), built with Electron.
+A fast, modern and strictly **read-only** desktop viewer for e-mail archives, built with Electron.
 
-- **Welcome screen** with recently opened files – reopen with one click, open a file via dialog, `⌘O`/`Ctrl+O` or drag & drop.
+- **Formats**:
+  - Outlook data files (`.pst`, ANSI and Unicode),
+  - Outlook items (`.msg`) – mails, appointments and attached items,
+  - single messages (`.eml`, `.emlx`),
+  - MBOX mailboxes (`.mbox`, `.mbx` or no extension) from Google Takeout (Gmail labels become folders, read/starred state is kept), Thunderbird (read and flag state) and other mail clients,
+  - folders: a directory tree of `.eml`/`.msg` files and Apple Mail exports (`*.mbox` bundles) is shown as a folder tree.
+- **Welcome screen** with recently opened files and folders – reopen with one click, open a file (`⌘O`/`Ctrl+O`) or a folder (`⇧⌘O`/`Ctrl+Shift+O`) via dialog, or drag & drop.
 - **Mailbox layout**: folder tree, virtualised message list grouped by date (Today, Yesterday, This week, …) and a reading pane.
 - **Fast opening**: the message list is built from the folders' contents tables first (a 600 MB file with 2,300 items opens in about half a second); bodies, recipients and attachments are indexed in the background.
 - **Search** across all folders or the current folder, as you type, with
@@ -17,7 +23,7 @@ A fast, modern and strictly **read-only** desktop viewer for Outlook data files 
 
 ## Read-only guarantee
 
-The PST file is opened with the read-only flag (`fs.openSync(path, 'r')`) inside a separate utility process; the app has no code path that writes to it. The only things written to disk are:
+Archives are opened with the read-only flag (`fs.openSync(path, 'r')`) or read with `fs.readFile` inside a separate utility process; the app has no code path that writes to them. The only things written to disk are:
 
 - the app settings (`settings.json` in the user data folder: window size, theme, language and the list of recent files – paths and item counts only, never mail content),
 - attachments and exports you explicitly save via a save dialog (existing files are never overwritten when saving all attachments),
@@ -56,7 +62,8 @@ The PST file is opened with the read-only flag (`fs.openSync(path, 'r')`) inside
 
 | Shortcut | Action |
 | --- | --- |
-| `⌘O` / `Ctrl+O` | open a PST file |
+| `⌘O` / `Ctrl+O` | open a file |
+| `⇧⌘O` / `Ctrl+Shift+O` | open a folder |
 | `⌘F` / `Ctrl+F` or `/` | search |
 | `⌥⌘F` / `Ctrl+Alt+F` | filter panel |
 | `↑` `↓` (`j` `k`), `PageUp` `PageDown`, `Home` `End` | navigate messages |
@@ -69,20 +76,20 @@ The PST file is opened with the read-only flag (`fs.openSync(path, 'r')`) inside
 
 ## Development
 
-Requirements: Node.js 22 or newer.
+Requirements: Node.js 22 or newer and pnpm (see the repository root). Run the commands in this folder, or from the root with `pnpm --filter @pst-viewer/desktop <script>`.
 
 ```bash
-npm install
-npm run dev          # start with hot reload
-npm run typecheck
-npm test             # unit tests
-PST_TEST_FILE=~/Downloads/sample.pst npm test   # plus integration tests against a real PST
-npm run build        # type check and production build into out/
-npm run dist:mac     # package (dmg) into dist/; also dist:win, dist:linux
-npm run icons        # re-render build/icon.png from build/icon.svg
+pnpm install         # once, in the repository root
+pnpm dev             # start with hot reload
+pnpm typecheck
+pnpm test            # unit tests (EML, MSG and MBOX fixtures are built in memory)
+PST_TEST_FILE=~/Downloads/sample.pst pnpm test   # plus integration tests against a real PST
+pnpm build           # production build into out/
+pnpm dist:mac        # package (dmg) into dist/; also dist:win, dist:linux
+pnpm icons           # re-render build/icon.png from build/icon.svg
 ```
 
-Unsigned local macOS builds work out of the box (`CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist:mac` skips looking for a signing identity). For distribution configure a Developer ID certificate and notarization for electron-builder.
+Unsigned local macOS builds work out of the box (`CSC_IDENTITY_AUTO_DISCOVERY=false pnpm dist:mac` skips looking for a signing identity). For distribution configure a Developer ID certificate and notarization for electron-builder.
 
 ## Architecture
 
@@ -90,19 +97,24 @@ Unsigned local macOS builds work out of the box (`CSC_IDENTITY_AUTO_DISCOVERY=fa
 src/
   main/       Electron main process: window, menu, security, IPC, recent files, settings
   preload/    contextBridge API (window.pstViewer)
-  worker/     utility process: PST parsing (pst-extractor), indexing, search, attachments
+  worker/     utility process: archive parsing, indexing, search, attachments, exports
   renderer/   React 19 UI (Tailwind CSS 4, zustand, TanStack Virtual)
   shared/     types, API contract, query parser, text folding – used by all layers
 tests/        unit and integration tests (Vitest)
 ```
 
-- The **worker** runs in an Electron `utilityProcess`, one per opened file. Opening builds the item list from the folders' contents tables; afterwards every message is opened in the background to index body text, recipients and attachments. The worker yields regularly so UI requests are answered while indexing; the renderer refreshes the visible results as the index fills.
+- The **worker** runs in an Electron `utilityProcess`, one per opened file. Every format implements the `Archive` interface (`src/worker/archive.ts`):
+  - `PstIndex` (`indexer.ts`) builds the item list from the folders' contents tables of a PST file (pst-extractor),
+  - `LocalArchive` (`localArchive.ts`) lists `.eml`/`.msg` files, MBOX mailboxes (`mbox.ts` scans message boundaries in 8 MB chunks and keeps byte offsets, so even multi-GB files are not loaded into memory) and directory trees, reading only the headers at first (`headers.ts`).
+
+  Afterwards every message is opened in the background to index body text, recipients and attachments. The worker yields regularly so UI requests are answered while indexing; the renderer refreshes the visible results as the index fills.
 - Search runs in memory in the worker: folded (lower-case, accent-free) text fields, a small query language (`src/shared/query.ts`), sorting and date grouping. Results are paged to the renderer and displayed in a virtualised list.
-- Message details are loaded on demand; S/MIME signed messages and attached `.eml` files are parsed with postal-mime, RTF bodies are de-encapsulated with rtf-stream-parser, `.eml` exports are composed with nodemailer's MIME builder (nothing is ever sent).
+- Message details are loaded on demand; MIME messages (`.eml`, MBOX, S/MIME signed and attached messages) are parsed with postal-mime, `.msg` files with msgreader, RTF bodies are de-encapsulated with rtf-stream-parser. `.eml` exports of MIME messages are the original bytes; Outlook items are composed with nodemailer's MIME builder (nothing is ever sent).
 
 ## Known limitations
 
 - Encrypted S/MIME messages cannot be decrypted (the PST does not contain the private key).
 - Offline storage files (`.ost`) of newer Outlook versions use a compressed format that pst-extractor cannot read.
+- Outlook for Mac archives (`.olm`) are not supported yet.
 - Messages are exported as `.eml`, not as Outlook `.msg` files.
 - Tested on macOS; the Windows and Linux builds are configured but not yet tested.

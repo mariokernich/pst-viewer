@@ -17,7 +17,7 @@ const api: PstViewerApi = {
   getAppInfo: () => invoke('app:getInfo'),
   setTheme: (source) => invoke('app:setTheme', source),
   setRemoteImagesAllowed: (allowed) => invoke('app:setRemoteImages', allowed),
-  showOpenDialog: () => invoke('dialog:openPst'),
+  showOpenDialog: (kind = 'file') => invoke('dialog:openPst', kind),
   getPathForFile: (file) => webUtils.getPathForFile(file),
 
   openPst: (path) => invoke('pst:open', path),

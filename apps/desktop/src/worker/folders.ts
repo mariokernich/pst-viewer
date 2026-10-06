@@ -3,9 +3,9 @@ import type { FolderNode, SpecialFolder } from '../shared/types'
 const NAME_PATTERNS: [SpecialFolder, RegExp][] = [
   ['inbox', /^(inbox|posteingang|boîte de réception|bandeja de entrada|posta in arrivo|postvak in)$/i],
   ['drafts', /^(drafts|entwürfe|entwuerfe|brouillons|borradores|bozze|concepten)$/i],
-  ['sent', /^(sent items|sent|sent mail|gesendete elemente|gesendet|gesendete objekte|éléments envoyés|elementos enviados|posta inviata|verzonden items)$/i],
-  ['deleted', /^(deleted items|deleted|trash|gelöschte elemente|geloeschte elemente|papierkorb|éléments supprimés|elementos eliminados|posta eliminata|verwijderde items)$/i],
-  ['archive', /^(archive|archiv|archives|archivo|archivio|archief)$/i],
+  ['sent', /^(sent items|sent|sent mail|sent messages|gesendete elemente|gesendet|gesendete objekte|gesendete nachrichten|éléments envoyés|elementos enviados|posta inviata|verzonden items)$/i],
+  ['deleted', /^(deleted items|deleted|deleted messages|trash|bin|gelöschte elemente|geloeschte elemente|gelöschte nachrichten|papierkorb|éléments supprimés|elementos eliminados|posta eliminata|verwijderde items)$/i],
+  ['archive', /^(archive|archived|archiv|archiviert|archives|archivo|archivio|archief|all mail|alle nachrichten)$/i],
   ['junk', /^(junk e-?mail|junk-e-mail|junk|spam|junk-e-mail-ordner|courrier indésirable|correo no deseado|posta indesiderata|ongewenste e-mail)$/i],
   ['outbox', /^(outbox|postausgang|boîte d'envoi|bandeja de salida|posta in uscita|postvak uit)$/i],
   ['syncIssues', /^(sync issues|synchronisierungsprobleme|problèmes de synchronisation)$/i],

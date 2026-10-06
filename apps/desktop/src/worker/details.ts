@@ -10,9 +10,12 @@ import type {
   TaskInfo
 } from '../shared/types'
 import { squash } from '../shared/text'
+import type { FieldsData } from '@kenjiuno/msgreader'
 import { contentFromEmail, loadContent, parseMime, raw, safe, type ContentAttachment, type MessageContent } from './content'
+import { msgAppointment, msgContent, msgDate, msgRecipients, msgSender, readMsg, type MsgFile } from './msg'
 import { referencedContentIds } from './html'
-import { actualSenderOf, kindOf, loadMessage, senderOf, type PstIndex } from './indexer'
+import type { Archive } from './archive'
+import { actualSenderOf, kindOf, loadMessage, senderOf } from './pstFields'
 
 const MAX_INLINE_IMAGE_BYTES = 15 * 1024 * 1024
 const MAX_INLINE_TOTAL_BYTES = 60 * 1024 * 1024
@@ -21,15 +24,16 @@ const PR_REPLY_RECIPIENT_NAMES = 0x0050
 
 export class NotFoundError extends Error {}
 
-/** A message stored in the PST, or a MIME message (.eml) attached to one. */
+/** A message from a PST, an Outlook item file (.msg) or a MIME message (.eml, MBOX). */
 export type ResolvedMessage =
   | { kind: 'pst'; msg: PSTMessage; content: MessageContent }
+  | { kind: 'msg'; file: MsgFile; fields: FieldsData; content: MessageContent }
   | { kind: 'mime'; raw: Buffer; email: Email; content: MessageContent }
 
 const MAX_NESTING = 8
 
-/** Loads a top-level message or a message attached to it (following ref.path). */
-export async function resolveMessage(pst: PSTFile, ref: MessageRef): Promise<ResolvedMessage> {
+/** Loads a PST message or a message attached to it (following ref.path). */
+export async function resolvePstMessage(pst: PSTFile, ref: MessageRef): Promise<ResolvedMessage> {
   let loaded: PSTMessage | null
   try {
     loaded = loadMessage(pst, ref.id)
@@ -37,9 +41,13 @@ export async function resolveMessage(pst: PSTFile, ref: MessageRef): Promise<Res
     throw new NotFoundError(`Item ${ref.id} not found`)
   }
   if (!loaded) throw new NotFoundError(`Item ${ref.id} is not a message`)
-  let resolved: ResolvedMessage = { kind: 'pst', msg: loaded, content: await loadContent(loaded) }
-  const path = ref.path ?? []
+  return followPath({ kind: 'pst', msg: loaded, content: await loadContent(loaded) }, ref.path ?? [])
+}
+
+/** Follows attachment indices from a message into attached messages. */
+export async function followPath(message: ResolvedMessage, path: number[]): Promise<ResolvedMessage> {
   if (path.length > MAX_NESTING) throw new NotFoundError('Nesting too deep')
+  let resolved = message
   for (const attachmentIndex of path) {
     const attachment = resolved.content.attachments[attachmentIndex]
     if (!attachment?.isMessage) throw new NotFoundError(`Attachment ${attachmentIndex} is not a message`)
@@ -50,6 +58,11 @@ export async function resolveMessage(pst: PSTFile, ref: MessageRef): Promise<Res
 
 /** Opens an attached message (embedded in the PST or attached as .eml). */
 export async function openAttachedMessage(attachment: ContentAttachment): Promise<ResolvedMessage> {
+  if (attachment.source === 'msgMessage') {
+    const inner = attachment.embeddedMsg?.()
+    if (!inner) throw new NotFoundError('The attached message cannot be read')
+    return { kind: 'msg', file: inner, fields: inner.data, content: msgContent(inner, inner.data) }
+  }
   if (attachment.source === 'pstMessage') {
     const msg = attachment.embedded()
     if (!msg) throw new NotFoundError('The attached message cannot be read')
@@ -57,15 +70,28 @@ export async function openAttachedMessage(attachment: ContentAttachment): Promis
   }
   const data = attachment.read()
   if (data.length === 0) throw new NotFoundError('The attached message is empty')
+  return resolveMime(data)
+}
+
+/** Parses a MIME message (.eml, MBOX entry, message/rfc822 attachment). */
+export async function resolveMime(data: Buffer): Promise<ResolvedMessage> {
   const email = await parseMime(data)
   const contentType = email.headers.find((h) => h.key === 'content-type')?.value ?? ''
   const security = /multipart\/signed/i.test(contentType) ? 'signed' : /application\/(x-)?pkcs7-mime/i.test(contentType) ? 'encrypted' : null
   return { kind: 'mime', raw: data, email, content: { ...contentFromEmail(email), security } }
 }
 
-export async function getMessageDetail(index: PstIndex, ref: MessageRef): Promise<MessageDetail> {
-  const resolved = await resolveMessage(index.pst, ref)
-  if (resolved.kind === 'mime') return mimeDetail(ref, resolved.raw, resolved.email, resolved.content)
+/** Opens an Outlook item file (.msg). */
+export function resolveMsg(data: Buffer): ResolvedMessage {
+  const file = readMsg(data)
+  return { kind: 'msg', file, fields: file.data, content: msgContent(file, file.data) }
+}
+
+export async function getMessageDetail(index: Archive, ref: MessageRef): Promise<MessageDetail> {
+  const resolved = await index.resolve(ref)
+  const folderId = ref.path?.length ? null : (index.itemById.get(ref.id)?.folderId ?? null)
+  if (resolved.kind === 'mime') return { ...mimeDetail(ref, resolved.raw, resolved.email, resolved.content), folderId }
+  if (resolved.kind === 'msg') return { ...msgDetail(ref, resolved.fields, resolved.content), folderId }
   const { msg, content } = resolved
   const messageClass = safe(() => msg.messageClass, '') || 'IPM.Note'
   const kind = kindOf(messageClass)
@@ -119,6 +145,41 @@ function bodyAndAttachments(content: MessageContent): Pick<MessageDetail, 'bodyF
     text: content.text,
     attachments,
     inlineImages: inlineImages(content.attachments, cids)
+  }
+}
+
+/** Details of an Outlook item file (.msg). */
+function msgDetail(ref: MessageRef, fields: FieldsData, content: MessageContent): MessageDetail {
+  const messageClass = fields.messageClass || 'IPM.Note'
+  const kind = kindOf(messageClass)
+  const time = (value?: string): number | null => {
+    const t = value ? Date.parse(value) : NaN
+    return Number.isNaN(t) ? null : t
+  }
+  return {
+    ref,
+    folderId: null,
+    kind,
+    messageClass,
+    subject: fields.subject ?? '',
+    from: msgSender(fields),
+    sender: null,
+    replyTo: '',
+    recipients: msgRecipients(fields),
+    date: msgDate(fields),
+    sentDate: time(fields.clientSubmitTime),
+    receivedDate: time(fields.messageDeliveryTime),
+    size: 0,
+    importance: 1,
+    isRead: fields.messageFlags === undefined ? true : (fields.messageFlags & 0x01) !== 0,
+    flagged: false,
+    categories: [],
+    ...bodyAndAttachments(content),
+    headers: fields.headers ?? '',
+    security: content.security,
+    appointment: msgAppointment(fields),
+    contact: null,
+    task: null
   }
 }
 

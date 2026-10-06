@@ -3,6 +3,7 @@ import { hasActiveFilters } from '@shared/filters'
 import {
   DEFAULT_FILTERS,
   type AppInfo,
+  type ArchiveFormat,
   type AttachmentInfo,
   type AttachmentPreview,
   type ExportFormat,
@@ -122,7 +123,7 @@ interface Actions {
   refreshRecent(): Promise<void>
   removeRecent(path: string): Promise<void>
   clearRecent(): Promise<void>
-  openDialog(): Promise<void>
+  openDialog(kind?: 'file' | 'folder'): Promise<void>
   openFile(path: string): Promise<void>
   cancelOpen(): void
   dismissError(): void
@@ -173,6 +174,7 @@ const INDEX_REFRESH_MS = 2500
 let searchSeq = 0
 let detailSeq = 0
 let lastIndexRefresh = 0
+let autoSelectSingle = false
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 let toastId = 0
@@ -212,9 +214,11 @@ function buildFolderInfo(folders: FolderNode[]): Map<number, FolderInfo> {
   return map
 }
 
-function defaultFolder(folders: FolderNode[]): number | null {
+function defaultFolder(folders: FolderNode[], format: ArchiveFormat): number | null {
   const inbox = folders.find((f) => f.special === 'inbox' && f.itemCount > 0)
   if (inbox) return inbox.id
+  // Mail files spread over a directory tree are best shown all at once.
+  if (format === 'folder') return null
   const firstWithItems = (nodes: FolderNode[]): FolderNode | null => {
     for (const n of nodes) {
       if (n.itemCount > 0) return n
@@ -308,8 +312,8 @@ export const useApp = create<State & Actions>()((set, get) => ({
     set({ recent: [] })
   },
 
-  async openDialog() {
-    const path = await call(bridge.showOpenDialog())
+  async openDialog(kind = 'file') {
+    const path = await call(bridge.showOpenDialog(kind))
     if (path) await get().openFile(path)
   },
 
@@ -322,7 +326,7 @@ export const useApp = create<State & Actions>()((set, get) => ({
     const unsubscribe = bridge.onProgress((progress) => set({ progress }))
     try {
       const opened = await call(bridge.openPst(path))
-      const folderId = defaultFolder(opened.folders)
+      const folderId = defaultFolder(opened.folders, opened.store.format)
       set({
         screen: 'mailbox',
         store: opened.store,
@@ -334,6 +338,8 @@ export const useApp = create<State & Actions>()((set, get) => ({
         progress: null,
         indexProgress: opened.contentIndexed ? null : { done: 0, total: opened.store.itemCount }
       })
+      // A single message (EML/MSG file) is shown right away once listed.
+      autoSelectSingle = opened.store.itemCount === 1
       await get().runSearch()
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'UNKNOWN'
@@ -456,6 +462,10 @@ export const useApp = create<State & Actions>()((set, get) => ({
         selectedIndex,
         searching: false
       })
+      if (autoSelectSingle && response.total === 1) {
+        autoSelectSingle = false
+        void get().selectIndex(0)
+      }
     } catch (err) {
       if (seq !== searchSeq) return
       set({ searching: false })

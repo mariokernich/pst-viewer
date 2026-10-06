@@ -44,14 +44,15 @@ export interface FolderNode {
   children: FolderNode[]
 }
 
-export type PstFormat = 'ansi' | 'unicode' | 'unicode4k' | 'unknown'
+/** Format of the opened archive: PST variants, MBOX, single EML/MSG files or a folder of mail files. */
+export type ArchiveFormat = 'ansi' | 'unicode' | 'unicode4k' | 'unknown' | 'mbox' | 'eml' | 'msg' | 'folder'
 
 export interface StoreInfo {
   filePath: string
   fileName: string
   fileSize: number
   displayName: string
-  format: PstFormat
+  format: ArchiveFormat
   itemCount: number
   folderCount: number
   dateRange: { min: number; max: number } | null
@@ -325,6 +326,8 @@ export interface RecentFile {
   lastOpened: number
   itemCount: number | null
   exists: boolean
+  /** A folder of mail files rather than a single file. */
+  isFolder: boolean
 }
 
 export type ThemeSource = 'system' | 'light' | 'dark'
@@ -349,6 +352,7 @@ export interface AppInfo extends LocaleInfo {
 
 export type MenuCommand =
   | 'open'
+  | 'openFolder'
   | 'close'
   | 'find'
   | 'toggleFilters'

@@ -1,53 +1,25 @@
 import { basename } from 'node:path'
 import { statSync } from 'node:fs'
-import Long from 'long'
-import { PSTFile, PSTMessage, PSTUtil, type PSTFolder } from './pst'
+import { PSTFile, type PSTFolder, type PSTMessage } from './pst'
 import type {
   FolderNode,
   ItemKind,
+  MessageRef,
   OpenProgress,
-  PstFormat,
-  SecurityKind,
+  ArchiveFormat,
   SenderSuggestion,
   SpecialFolder,
   StoreInfo
 } from '../shared/types'
 import { foldForIndex, squash } from '../shared/text'
+import { collectSenders, yieldToEventLoop, type Archive, type ContentIndexOptions, type IndexedItem } from './archive'
 import { loadContent, raw, safe } from './content'
+import { resolvePstMessage, type ResolvedMessage } from './details'
+import { kindOf, loadMessage, recipientsLine, senderOf } from './pstFields'
 import { readContentsTable, type ContentsRow } from './contentsTable'
 import { referencedContentIds } from './html'
 import { collectFolderIds, computeTotals, detectSpecialFolder, sortFolders } from './folders'
 import { classifyAttachment } from './attachmentTypes'
-
-/** An item as kept in memory for listing and searching. */
-export interface IndexedItem {
-  id: number
-  folderId: number
-  kind: ItemKind
-  messageClass: string
-  subject: string
-  fromName: string
-  fromEmail: string
-  toLine: string
-  date: number
-  size: number
-  attachmentCount: number
-  isRead: boolean
-  importance: 0 | 1 | 2
-  flagged: boolean
-  security: SecurityKind | null
-  preview: string
-  /** Bit mask of attachment categories (see attachmentTypes.ts). */
-  attachmentKinds: number
-  /** False while only the contents table data is known (body not indexed yet). */
-  indexed: boolean
-  // Folded search fields (see shared/text.ts).
-  sSubject: string
-  sFrom: string
-  sTo: string
-  sBody: string
-  sAttach: string
-}
 
 export class PstError extends Error {
   constructor(
@@ -65,8 +37,6 @@ const MAX_BODY_INDEX_LENGTH = 512 * 1024
 const YIELD_INTERVAL_MS = 30
 
 const PR_FLAG_STATUS = 0x1090
-const PR_SENDER_SMTP_ADDRESS = 0x5d01
-const PR_SENT_REPRESENTING_SMTP_ADDRESS = 0x5d02
 const PR_IPM_SUBTREE_ENTRYID = 0x35e0
 const MSGFLAG_READ = 0x01
 const MSGFLAG_HASATTACH = 0x10
@@ -82,16 +52,7 @@ export interface OpenOptions {
   isCanceled?: () => boolean
 }
 
-export interface ContentIndexOptions {
-  onProgress?: (done: number, total: number) => void
-  isCanceled?: () => boolean
-  /** Folder whose items are indexed first (usually the one on screen). */
-  priorityFolderId?: number | null
-}
-
-const yieldToEventLoop = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
-
-export class PstIndex {
+export class PstIndex implements Archive {
   readonly items: IndexedItem[] = []
   readonly itemById = new Map<number, IndexedItem>()
   readonly folderById = new Map<number, FolderNode>()
@@ -146,6 +107,10 @@ export class PstIndex {
 
   close(): void {
     safe(() => this.pst.close(), undefined)
+  }
+
+  resolve(ref: MessageRef): Promise<ResolvedMessage> {
+    return resolvePstMessage(this.pst, ref)
   }
 
   // ---------------------------------------------------------------------------
@@ -445,12 +410,6 @@ function hasContent(node: FolderNode, scanned: ScannedFolder[]): boolean {
   return scanned.some((s) => ids.has(s.node.id) && safe(() => s.folder.contentCount, 0) > 0)
 }
 
-/** Loads a top-level message by its node id. */
-export function loadMessage(pst: PSTFile, id: number): PSTMessage | null {
-  const obj: unknown = PSTUtil.detectAndLoadPSTObject(pst, Long.fromNumber(id))
-  return obj instanceof PSTMessage ? obj : null
-}
-
 /**
  * Returns the next item of a folder, null for an unreadable item that was
  * skipped, or undefined when the folder is exhausted.
@@ -507,31 +466,6 @@ function itemFromRow(row: ContentsRow, folderId: number, special: SpecialFolder 
   }
 }
 
-function collectSenders(items: IndexedItem[]): SenderSuggestion[] {
-  const senders = new Map<string, SenderSuggestion>()
-  for (const item of items) {
-    if (!item.fromEmail && !item.fromName) continue
-    const key = (item.fromEmail || item.fromName).toLowerCase()
-    const entry = senders.get(key)
-    if (entry) entry.count++
-    else senders.set(key, { name: item.fromName, email: item.fromEmail, count: 1 })
-  }
-  return [...senders.values()].sort((a, b) => b.count - a.count).slice(0, 5000)
-}
-
-export function kindOf(messageClass: string): ItemKind {
-  const c = messageClass.toUpperCase()
-  if (c.startsWith('IPM.SCHEDULE.MEETING')) return 'meeting'
-  if (c.startsWith('IPM.APPOINTMENT')) return 'appointment'
-  if (c.startsWith('IPM.CONTACT') || c.startsWith('IPM.DISTLIST') || c.startsWith('IPM.ABCHPERSON')) return 'contact'
-  if (c.startsWith('IPM.TASK')) return 'task'
-  if (c.startsWith('IPM.STICKYNOTE')) return 'note'
-  if (c.startsWith('IPM.ACTIVITY')) return 'journal'
-  if (c.startsWith('IPM.NOTE') || c.startsWith('REPORT.') || c.startsWith('IPM.POST') || c === 'IPM' || c.startsWith('IPM.SHARING') || c.startsWith('IPM.OUTLOOK.RECALL'))
-    return 'mail'
-  return 'other'
-}
-
 function itemDate(msg: PSTMessage, kind: ItemKind, special: SpecialFolder | null): number {
   const t = (d: Date | null | undefined): number => (d instanceof Date && !Number.isNaN(d.getTime()) ? d.getTime() : 0)
   if (kind === 'appointment') {
@@ -549,59 +483,7 @@ function itemDate(msg: PSTMessage, kind: ItemKind, special: SpecialFolder | null
   )
 }
 
-export interface Address {
-  name: string
-  email: string
-}
-
-/** Resolves the displayed sender, preferring SMTP addresses over Exchange DNs. */
-export function senderOf(msg: PSTMessage): Address {
-  const name = safe(() => msg.sentRepresentingName, '') || safe(() => msg.senderName, '')
-  const candidates = [
-    safe(() => msg.sentRepresentingEmailAddress, ''),
-    safe(() => raw(msg).getStringItem(PR_SENT_REPRESENTING_SMTP_ADDRESS), ''),
-    safe(() => msg.senderEmailAddress, ''),
-    safe(() => raw(msg).getStringItem(PR_SENDER_SMTP_ADDRESS), '')
-  ]
-  let email = candidates.find((c) => c.includes('@')) ?? ''
-  if (!email) email = fromHeader(safe(() => msg.transportMessageHeaders, ''))
-  return { name: squash(name || email), email: email.trim() }
-}
-
-/** The actual sender if a message was sent on behalf of someone else. */
-export function actualSenderOf(msg: PSTMessage): Address | null {
-  const name = safe(() => msg.senderName, '')
-  const email =
-    [safe(() => msg.senderEmailAddress, ''), safe(() => raw(msg).getStringItem(PR_SENDER_SMTP_ADDRESS), '')].find((c) => c.includes('@')) ?? ''
-  const representing = senderOf(msg)
-  if (!name && !email) return null
-  const sameEmail = email && representing.email && email.toLowerCase() === representing.email.toLowerCase()
-  const sameName = name && representing.name && name.toLowerCase() === representing.name.toLowerCase()
-  if (sameEmail || (!email && sameName)) return null
-  return { name: squash(name || email), email }
-}
-
-function fromHeader(headers: string): string {
-  const m = /^from:[^\r\n]*?<?([^\s<>"]+@[^\s<>"]+)>?/im.exec(headers)
-  return m ? m[1] : ''
-}
-
-function recipientsLine(msg: PSTMessage): { names: string; emails: string } {
-  const names: string[] = []
-  const emails: string[] = []
-  const count = safe(() => msg.numberOfRecipients, 0)
-  for (let i = 0; i < count; i++) {
-    const r = safe(() => msg.getRecipient(i), null)
-    if (!r) continue
-    const name = safe(() => r.displayName, '')
-    const email = [safe(() => r.smtpAddress, ''), safe(() => r.emailAddress, '')].find((e) => e.includes('@')) ?? ''
-    if (safe(() => r.recipientType, 1) === 1 && name) names.push(name)
-    if (email) emails.push(email)
-  }
-  return { names: names.join('; '), emails: emails.join(' ') }
-}
-
-function formatOf(type: number): PstFormat {
+function formatOf(type: number): ArchiveFormat {
   if (type === 14 || type === 15) return 'ansi'
   if (type === 23) return 'unicode'
   if (type === 36) return 'unicode4k'

@@ -108,7 +108,10 @@ function useMenuCommands(): void {
         const inMailbox = state.screen === 'mailbox'
         switch (command) {
           case 'open':
-            void state.openDialog()
+            void state.openDialog('file')
+            break
+          case 'openFolder':
+            void state.openDialog('folder')
             break
           case 'close':
             if (inMailbox) void state.closeFile()

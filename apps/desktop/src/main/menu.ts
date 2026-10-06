@@ -58,6 +58,7 @@ export function buildMenu(recent: RecentFile[], handlers: MenuHandlers): void {
       label: isMac ? s.file : s.fileWin,
       submenu: [
         { label: s.open, accelerator: 'CmdOrCtrl+O', click: cmd('open') },
+        { label: s.openFolder, accelerator: 'CmdOrCtrl+Shift+O', click: cmd('openFolder') },
         { label: s.openRecent, submenu: recentItems },
         { type: 'separator' },
         { label: s.exportPdf, enabled: handlers.hasOpenFile, click: cmd('exportPdf') },

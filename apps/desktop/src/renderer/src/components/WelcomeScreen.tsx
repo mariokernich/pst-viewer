@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { CircleAlert, Clock, FolderSearch, FolderOpen, Lock, Upload, X } from 'lucide-react'
+import { CircleAlert, Clock, Folder, FolderSearch, FolderOpen, Lock, Upload, X } from 'lucide-react'
 import { useRef } from 'react'
 import type { RecentFile } from '@shared/types'
 import { bridge } from '@/api'
@@ -37,21 +37,38 @@ export function WelcomeScreen({ dragActive }: { dragActive: boolean }) {
               <Upload className="size-6" strokeWidth={1.8} />
             </div>
             <div className="mt-3 text-[15px] font-semibold">{dragActive ? t('dropOverlay') : t('dropHere')}</div>
-            <p className="mt-1 max-w-[300px] text-[12.5px] leading-relaxed text-fg-muted">{t('dropHint')}</p>
-            <Button variant="primary" size="lg" icon={FolderOpen} className="mt-5" onClick={() => void openDialog()}>
-              {t('openFile')}
-            </Button>
+            <p className="mt-1 max-w-[320px] text-[12.5px] leading-relaxed text-fg-muted">{t('dropHint')}</p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <Button variant="primary" size="lg" icon={FolderOpen} onClick={() => void openDialog('file')}>
+                {t('openFile')}
+              </Button>
+              <Button variant="ghost" size="lg" icon={Folder} className="text-accent" onClick={() => void openDialog('folder')}>
+                {t('openFolder')}
+              </Button>
+            </div>
+            <div className="mt-4 flex flex-wrap justify-center gap-1.5" aria-label={t('supportedFormats')}>
+              {['PST', 'MSG', 'EML', 'MBOX'].map((format) => (
+                <span key={format} className="rounded-md bg-fill px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tracking-wide text-fg-muted">
+                  {format}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="mt-5 flex items-center gap-2 text-[12.5px] text-fg-muted">
             <Lock className="size-3.5 shrink-0" strokeWidth={2} />
             <span>{t('readOnlyNote')}</span>
           </div>
-          <div className="mt-3 flex items-center gap-4 text-[12px] text-fg-subtle">
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-[12px] text-fg-subtle">
             <span className="flex items-center gap-1.5">
               <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
               <Kbd>O</Kbd>
               {t('shortcutOpen')}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Kbd>{isMac ? '⇧⌘' : 'Ctrl+Shift'}</Kbd>
+              <Kbd>O</Kbd>
+              {t('openFolder').replace(/\s*…$/, '')}
             </span>
           </div>
         </section>
@@ -146,7 +163,7 @@ function RecentRow({ file }: { file: RecentFile }) {
   const openFile = useApp((s) => s.openFile)
   const removeRecent = useApp((s) => s.removeRecent)
   const isMac = useApp((s) => s.info?.platform === 'darwin')
-  const details = [prettyPath(dirname(file.path)), formatSize(file.size), file.itemCount !== null ? tp('itemCount', file.itemCount) : null].filter(Boolean)
+  const details = [prettyPath(dirname(file.path)), file.isFolder ? null : formatSize(file.size), file.itemCount !== null ? tp('itemCount', file.itemCount) : null].filter(Boolean)
 
   return (
     <li className="group relative">
@@ -157,7 +174,7 @@ function RecentRow({ file }: { file: RecentFile }) {
         title={file.path}
         className={clsx('flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 pr-20 text-left transition-colors hover:bg-hover focus-visible:bg-hover', !file.exists && 'opacity-55')}
       >
-        <PstFileIcon />
+        <PstFileIcon path={file.path} isFolder={file.isFolder} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-[13.5px] font-semibold">{file.name}</span>
@@ -177,14 +194,25 @@ function RecentRow({ file }: { file: RecentFile }) {
   )
 }
 
-export function PstFileIcon({ className }: { className?: string }) {
+/** Document icon with the file type, or a folder for folders of mail files. */
+export function PstFileIcon({ className, path = '', isFolder = false }: { className?: string; path?: string; isFolder?: boolean }) {
+  if (isFolder) {
+    return (
+      <div className={clsx('flex h-11 w-9 shrink-0 items-center justify-center', className)} aria-hidden>
+        <Folder className="size-8 text-accent" strokeWidth={1.5} fill="color-mix(in srgb, var(--accent) 18%, transparent)" />
+      </div>
+    )
+  }
+  const ext = (/\.(pst|ost|msg|eml|emlx|mbox|mbx)$/i.exec(path)?.[1] ?? 'mail').toUpperCase()
+  const label = ext === 'MBX' ? 'MBOX' : ext === 'EMLX' ? 'EML' : ext
+  const color = label === 'PST' || label === 'OST' ? '#4a64ff' : label === 'MSG' ? '#0a84ff' : label === 'EML' ? '#1f9d55' : label === 'MBOX' ? '#8e4ec6' : '#6b7280'
   return (
     <svg viewBox="0 0 40 48" className={clsx('h-11 w-9 shrink-0 drop-shadow-sm', className)} aria-hidden>
       <path d="M6 1h20l13 13v28a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V6a5 5 0 0 1 5-5z" fill="var(--surface-raised)" stroke="var(--line-strong)" />
       <path d="M26 1v9a4 4 0 0 0 4 4h9" fill="none" stroke="var(--line-strong)" />
-      <rect x="6" y="25" width="28" height="13" rx="4" fill="#4a64ff" />
-      <text x="20" y="34.6" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#fff" fontFamily="system-ui, sans-serif">
-        PST
+      <rect x="4" y="25" width="32" height="13" rx="4" fill={color} />
+      <text x="20" y="34.6" textAnchor="middle" fontSize={label.length > 3 ? 7.5 : 8.5} fontWeight="700" fill="#fff" fontFamily="system-ui, sans-serif">
+        {label}
       </text>
     </svg>
   )

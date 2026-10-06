@@ -1,4 +1,5 @@
 import { t } from '@/i18n'
+import { formatSize } from '@/lib/format'
 import { useApp } from '@/store'
 import { Button } from './ui/Button'
 import { PstFileIcon } from './WelcomeScreen'
@@ -9,8 +10,17 @@ export function LoadingScreen() {
   const cancelOpen = useApp((s) => s.cancelOpen)
   const name = path.split(/[\\/]/).pop() ?? path
 
-  const determinate = progress?.phase === 'indexing' && progress.total > 0
+  // Indexing counts items; scanning an MBOX counts bytes.
+  const determinate = (progress?.phase === 'indexing' || progress?.phase === 'scanning') && progress.total > 0
   const percent = determinate ? Math.min(100, Math.round((progress.done / progress.total) * 100)) : 0
+  const detail =
+    progress?.phase === 'indexing' && progress.total > 0
+      ? t('loadingProgress', { done: progress.done, total: progress.total })
+      : progress?.phase === 'scanning' && progress.total > 0
+        ? t('loadingScanBytes', { done: formatSize(progress.done), total: formatSize(progress.total) })
+        : progress?.phase === 'scanning' && progress.done > 0
+          ? t('loadingFound', { count: progress.done })
+          : ''
   const status =
     progress?.phase === 'indexing'
       ? t('loadingIndexing')
@@ -26,7 +36,7 @@ export function LoadingScreen() {
       <div className="flex flex-1 items-center justify-center pb-16">
         <div className="w-[440px] animate-slide-up rounded-3xl border border-line bg-surface/80 p-7 shadow-card backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <PstFileIcon />
+            <PstFileIcon path={path} />
             <div className="min-w-0">
               <div className="truncate text-[15px] font-semibold" title={path}>
                 {t('loadingTitle', { name })}
@@ -52,8 +62,8 @@ export function LoadingScreen() {
           </div>
 
           <div className="mt-2.5 flex h-4 items-center justify-between gap-4 text-[11.5px] text-fg-muted tabular-nums">
-            <span className="truncate">{determinate && progress.folderName ? t('loadingFolder', { name: progress.folderName }) : ''}</span>
-            <span className="shrink-0">{determinate ? t('loadingProgress', { done: progress.done, total: progress.total }) : ''}</span>
+            <span className="truncate">{progress?.folderName ? t('loadingFolder', { name: progress.folderName }) : ''}</span>
+            <span className="shrink-0">{detail}</span>
           </div>
 
           <div className="mt-5 flex justify-end">

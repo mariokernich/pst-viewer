@@ -21,6 +21,8 @@
     "icons": "electron scripts/render-icon.cjs"
   },
   "dependencies": {
+    "@kenjiuno/decompressrtf": "^0.1.4",
+    "@kenjiuno/msgreader": "^1.28.0",
     "iconv-lite": "^0.7.3",
     "long": "^5.3.2",
     "nodemailer": "^10.0.15",
@@ -34,6 +36,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "cfb": "^1.2.2",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.16",
     "electron": "^44.5.1",
@@ -48,7 +51,7 @@
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "vite": "^7.3.7",
+    "vite": "7.3.6",
     "vitest": "^4.1.0",
     "zustand": "^5.0.15"
   }

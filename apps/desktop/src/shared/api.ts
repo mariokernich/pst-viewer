@@ -29,7 +29,7 @@ export interface PstViewerApi {
   getAppInfo(): Call<AppInfo>
   setTheme(source: ThemeSource): Call<void>
   setRemoteImagesAllowed(allowed: boolean): Call<void>
-  showOpenDialog(): Call<string | null>
+  showOpenDialog(kind?: 'file' | 'folder'): Call<string | null>
   getPathForFile(file: File): string
 
   openPst(path: string): Call<OpenResult>

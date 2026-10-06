@@ -11,11 +11,26 @@ files:
   - package.json
   - '!**/*.map'
 
-# Double-clicking a .pst file opens it in the viewer (read-only, never as editor).
+# Double-clicking a mail file opens it in the viewer (read-only, never as editor).
 fileAssociations:
   - ext: pst
     name: Outlook Data File
     description: Outlook Data File
+    role: Viewer
+    icon: build/icon.png
+  - ext: msg
+    name: Outlook Item
+    description: Outlook Item
+    role: Viewer
+    icon: build/icon.png
+  - ext: eml
+    name: Email Message
+    description: Email Message
+    role: Viewer
+    icon: build/icon.png
+  - ext: mbox
+    name: Mailbox
+    description: Mailbox (MBOX)
     role: Viewer
     icon: build/icon.png
 

@@ -48,7 +48,9 @@ import { addRecentFile, clearRecentFiles, listRecentFiles, removeRecentFile, set
 import { PstWorkerClient, WorkerError } from './workerClient'
 
 const DEV_URL = process.env.ELECTRON_RENDERER_URL
-const PST_EXTENSIONS = /\.(pst|ost)$/i
+/** Files the app can open (Outlook data files, Outlook items, MIME messages, MBOX). */
+const MAIL_FILES = /\.(pst|ost|msg|eml|emlx|mbox|mbx)$/i
+const MAIL_EXTENSIONS = ['pst', 'ost', 'msg', 'eml', 'emlx', 'mbox', 'mbx']
 
 let mainWindow: BrowserWindow | null = null
 let currentFile: string | null = null
@@ -90,7 +92,7 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 function pstPathFromArgv(argv: string[]): string | null {
-  return argv.slice(1).find((arg) => PST_EXTENSIONS.test(arg) && !arg.startsWith('-')) ?? null
+  return argv.slice(1).find((arg) => MAIL_FILES.test(arg) && !arg.startsWith('-')) ?? null
 }
 
 function requestOpen(path: string): void {
@@ -484,16 +486,20 @@ function registerIpc(): void {
     allowRemoteImages = allowed === true
   })
 
-  handle('dialog:openPst', async (): Promise<string | null> => {
+  handle('dialog:openPst', async (kind: unknown): Promise<string | null> => {
     const s = t()
+    const folder = kind === 'folder'
     const result = await dialog.showOpenDialog(mainWindow!, {
-      title: s.openDialogTitle,
+      title: folder ? s.openFolderDialogTitle : s.openDialogTitle,
       buttonLabel: s.openDialogButton,
-      properties: ['openFile'],
-      filters: [
-        { name: s.pstFilter, extensions: ['pst', 'ost'] },
-        { name: s.allFiles, extensions: ['*'] }
-      ]
+      // Without a filter on folders; MBOX files of Thunderbird have no extension.
+      properties: folder ? ['openDirectory'] : ['openFile'],
+      filters: folder
+        ? undefined
+        : [
+            { name: s.mailFilter, extensions: MAIL_EXTENSIONS },
+            { name: s.allFiles, extensions: ['*'] }
+          ]
     })
     return result.canceled ? null : (result.filePaths[0] ?? null)
   })
@@ -503,7 +509,7 @@ function registerIpc(): void {
     let size = 0
     try {
       const s = await stat(filePath)
-      if (!s.isFile()) throw new Error()
+      if (!s.isFile() && !s.isDirectory()) throw new Error()
       size = s.size
     } catch {
       throw new WorkerError('NOT_FOUND', filePath)
@@ -514,7 +520,7 @@ function registerIpc(): void {
     await worker.restart()
     try {
       const result = await worker.request('open', { path: filePath })
-      addRecentFile(filePath, size, result.store.itemCount)
+      addRecentFile(filePath, result.store.fileSize || size, result.store.itemCount)
       revealablePaths.add(filePath)
       setCurrentFile(filePath)
       return result

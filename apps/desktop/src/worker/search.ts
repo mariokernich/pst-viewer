@@ -2,7 +2,7 @@ import type { DateGroup, ResultGroup, SearchField, SearchFilters, SearchRequest 
 import { foldForIndex } from '../shared/text'
 import { hasActiveFilters } from '../shared/filters'
 import { highlightTerms, isEmptyQuery, parseQuery, type ParsedQuery, type QueryClause } from '../shared/query'
-import type { IndexedItem, PstIndex } from './indexer'
+import type { Archive, IndexedItem } from './archive'
 import { ATTACHMENT_TYPE_BITS } from './attachmentTypes'
 
 export interface SearchOutcome {
@@ -15,7 +15,7 @@ export interface SearchOutcome {
   isSearch: boolean
 }
 
-export function runSearch(index: PstIndex, req: SearchRequest): SearchOutcome {
+export function runSearch(index: Archive, req: SearchRequest): SearchOutcome {
   const now = new Date(req.now)
   const parsed = parseQuery(req.text, now)
   const predicate = buildPredicate(index, req, parsed, now)
@@ -48,7 +48,7 @@ function effectiveFields(filters: SearchFilters): SearchField[] {
   return filters.fields.length > 0 ? filters.fields : ['subject', 'from', 'to', 'body', 'attachments']
 }
 
-function buildPredicate(index: PstIndex, req: SearchRequest, q: ParsedQuery, now: Date): (item: IndexedItem) => boolean {
+function buildPredicate(index: Archive, req: SearchRequest, q: ParsedQuery, now: Date): (item: IndexedItem) => boolean {
   const f = req.filters
   const checks: ((item: IndexedItem) => boolean)[] = []
 
@@ -69,7 +69,7 @@ function buildPredicate(index: PstIndex, req: SearchRequest, q: ParsedQuery, now
   }
   if (allowedFolders) {
     const allowed = allowedFolders
-    checks.push((item) => allowed.has(item.folderId))
+    checks.push((item) => allowed.has(item.folderId) || (item.extraFolderIds?.some((id) => allowed.has(id)) ?? false))
   }
 
   // Date range

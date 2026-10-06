@@ -4,10 +4,12 @@ type Plural = { one: string; other: string }
 
 const de = {
   appName: 'PST Viewer',
-  tagline: 'Outlook-Datendateien öffnen, durchsuchen und lesen – schnell und ausschließlich lesend.',
-  openFile: 'PST-Datei öffnen …',
-  dropHere: 'PST-Datei hierher ziehen',
-  dropHint: 'oder eine Datei auswählen. Unterstützt werden .pst-Dateien aus allen Outlook-Versionen.',
+  tagline: 'E-Mail-Archive öffnen, durchsuchen und lesen – schnell und ausschließlich lesend.',
+  openFile: 'Datei öffnen …',
+  openFolder: 'Ordner öffnen …',
+  dropHere: 'E-Mail-Datei oder Ordner hierher ziehen',
+  dropHint: 'Outlook-Datendateien (.pst), Outlook-Elemente (.msg), E-Mails (.eml) und Postfächer (MBOX, z. B. aus Gmail, Apple Mail oder Thunderbird).',
+  supportedFormats: 'Unterstützte Formate',
   dropOverlay: 'Loslassen, um die Datei zu öffnen',
   readOnlyNote: 'Ihre Dateien werden ausschließlich gelesen und niemals verändert.',
   readOnly: 'Schreibgeschützt',
@@ -26,7 +28,9 @@ const de = {
 
   loadingTitle: '{name} wird geöffnet',
   loadingOpening: 'Datei wird geöffnet …',
-  loadingScanning: 'Ordnerstruktur wird gelesen …',
+  loadingScanning: 'Nachrichten werden gesucht …',
+  loadingScanBytes: '{done} von {total} gelesen',
+  loadingFound: '{count} Nachrichten gefunden',
   loadingIndexing: 'Elemente werden indiziert …',
   loadingFinishing: 'Suchindex wird fertiggestellt …',
   loadingProgress: '{done} von {total} Elementen',
@@ -35,7 +39,7 @@ const de = {
 
   errorTitle: 'Die Datei konnte nicht geöffnet werden',
   error_NOT_FOUND: 'Die Datei wurde nicht gefunden. Möglicherweise wurde sie verschoben, umbenannt oder gelöscht.',
-  error_NOT_PST: 'Die Datei ist keine gültige Outlook-Datendatei (.pst) oder sie ist beschädigt.',
+  error_NOT_PST: 'Die Datei ist keine unterstützte E-Mail-Datei (PST, MSG, EML, MBOX), sie ist beschädigt oder der Ordner enthält keine E-Mails.',
   error_READ_FAILED: 'Beim Lesen der Datei ist ein Fehler aufgetreten.',
   error_NOT_OPEN: 'Es ist keine Datei geöffnet.',
   error_CANCELED: 'Der Vorgang wurde abgebrochen.',
@@ -337,10 +341,12 @@ type PluralKey = { [K in keyof Messages]: Messages[K] extends Plural ? K : never
 
 const en: Messages = {
   appName: 'PST Viewer',
-  tagline: 'Open, search and read Outlook data files – fast and strictly read-only.',
-  openFile: 'Open PST File…',
-  dropHere: 'Drop a PST file here',
-  dropHint: 'or choose a file. Data files from all Outlook versions are supported.',
+  tagline: 'Open, search and read mail archives – fast and strictly read-only.',
+  openFile: 'Open File…',
+  openFolder: 'Open Folder…',
+  dropHere: 'Drop a mail file or folder here',
+  dropHint: 'Outlook data files (.pst), Outlook items (.msg), emails (.eml) and mailboxes (MBOX, e.g. from Gmail, Apple Mail or Thunderbird).',
+  supportedFormats: 'Supported formats',
   dropOverlay: 'Release to open the file',
   readOnlyNote: 'Your files are only read and never modified.',
   readOnly: 'Read-only',
@@ -359,7 +365,9 @@ const en: Messages = {
 
   loadingTitle: 'Opening {name}',
   loadingOpening: 'Opening file…',
-  loadingScanning: 'Reading folder structure…',
+  loadingScanning: 'Looking for messages…',
+  loadingScanBytes: '{done} of {total} read',
+  loadingFound: '{count} messages found',
   loadingIndexing: 'Indexing items…',
   loadingFinishing: 'Finishing search index…',
   loadingProgress: '{done} of {total} items',
@@ -368,7 +376,7 @@ const en: Messages = {
 
   errorTitle: 'The file could not be opened',
   error_NOT_FOUND: 'The file was not found. It may have been moved, renamed or deleted.',
-  error_NOT_PST: 'The file is not a valid Outlook data file (.pst) or it is damaged.',
+  error_NOT_PST: 'The file is not a supported mail file (PST, MSG, EML, MBOX), it is damaged, or the folder contains no emails.',
   error_READ_FAILED: 'An error occurred while reading the file.',
   error_NOT_OPEN: 'No file is open.',
   error_CANCELED: 'The operation was canceled.',
