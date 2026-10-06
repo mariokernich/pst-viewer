@@ -1,0 +1,63 @@
+appId: de.kernich.pstviewer
+productName: PST Viewer
+copyright: Copyright © 2026 Mario Kernich
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+
+# Double-clicking a .pst file opens it in the viewer (read-only, never as editor).
+fileAssociations:
+  - ext: pst
+    name: Outlook Data File
+    description: Outlook Data File
+    role: Viewer
+    icon: build/icon.png
+
+# Harden the packaged app (https://www.electronjs.org/docs/latest/tutorial/fuses).
+electronFuses:
+  # Re-sign ad hoc after flipping fuses so unsigned local builds run on Apple Silicon.
+  resetAdHocDarwinSignature: true
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  darkModeSupport: true
+  extendInfo:
+    NSHumanReadableCopyright: Copyright © 2026 Mario Kernich
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+linux:
+  icon: build/icon.png
+  category: Office
+  target: [AppImage, deb]
+  maintainer: Mario Kernich <mario@kernich.de>

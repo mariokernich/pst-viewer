@@ -1,0 +1,272 @@
+@import 'tailwindcss';
+
+/* -------------------------------------------------------------------------
+ * Design tokens. Colours follow the platform conventions (macOS semantic
+ * colours) and switch with the system appearance.
+ * ---------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+  --accent: #0a84ff;
+  --accent-fg: #ffffff;
+
+  --fg: #1d1d1f;
+  --fg-muted: #6e6e73;
+  --fg-subtle: #a1a1a6;
+
+  --window: #f2f2f5;
+  --sidebar: #ececf0;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f5f5f7;
+  --paper: #ffffff;
+
+  --line: rgb(0 0 0 / 0.08);
+  --line-strong: rgb(0 0 0 / 0.14);
+  --fill: rgb(118 118 128 / 0.12);
+  --fill-strong: rgb(118 118 128 / 0.2);
+  --hover: rgb(0 0 0 / 0.045);
+  --selected-muted: color-mix(in srgb, var(--accent) 13%, transparent);
+
+  --danger: #ff3b30;
+  --warning: #ff9500;
+  --success: #34c759;
+  --highlight: #ffe168;
+  --highlight-fg: #1d1d1f;
+
+  --shadow-popover: 0 12px 40px rgb(0 0 0 / 0.16), 0 2px 8px rgb(0 0 0 / 0.08), 0 0 0 0.5px rgb(0 0 0 / 0.12);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.05), 0 0 0 0.5px rgb(0 0 0 / 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #f5f5f7;
+    --fg-muted: #a1a1a6;
+    --fg-subtle: #6e6e73;
+
+    --window: #1c1c1e;
+    --sidebar: #232325;
+    --surface: #1e1e20;
+    --surface-raised: #2c2c2e;
+    --surface-sunken: #171719;
+    --paper: #ffffff;
+
+    --line: rgb(255 255 255 / 0.08);
+    --line-strong: rgb(255 255 255 / 0.15);
+    --fill: rgb(118 118 128 / 0.24);
+    --fill-strong: rgb(118 118 128 / 0.34);
+    --hover: rgb(255 255 255 / 0.055);
+    --selected-muted: color-mix(in srgb, var(--accent) 24%, transparent);
+
+    --danger: #ff453a;
+    --warning: #ff9f0a;
+    --success: #30d158;
+    --highlight: #b8901a;
+    --highlight-fg: #ffffff;
+
+    --shadow-popover: 0 16px 48px rgb(0 0 0 / 0.5), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+    --shadow-card: 0 0 0 0.5px rgb(255 255 255 / 0.1);
+  }
+}
+
+/* macOS and Windows 11 render a translucent material behind the window. */
+html.platform-darwin {
+  --window: transparent;
+  --sidebar: transparent;
+}
+
+html.platform-win32 {
+  --sidebar: transparent;
+}
+
+@theme inline {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-window: var(--window);
+  --color-sidebar: var(--sidebar);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-paper: var(--paper);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+  --color-hover: var(--hover);
+  --color-selected-muted: var(--selected-muted);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-highlight: var(--highlight);
+  --color-highlight-fg: var(--highlight-fg);
+
+  --shadow-popover: var(--shadow-popover);
+  --shadow-card: var(--shadow-card);
+
+  --animate-fade-in: fade-in 160ms ease-out both;
+  --animate-pop-in: pop-in 160ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  --animate-slide-up: slide-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(-4px);
+    }
+  }
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Base styles
+ * ---------------------------------------------------------------------- */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--fg);
+    background: var(--window);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    user-select: none;
+    cursor: default;
+    overflow: hidden;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: default;
+  }
+
+  input::placeholder {
+    color: var(--fg-subtle);
+  }
+
+  .selectable,
+  .selectable * {
+    user-select: text;
+    cursor: auto;
+  }
+
+  .drag {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag,
+  .drag button,
+  .drag input,
+  .drag a,
+  .drag [role='button'] {
+    -webkit-app-region: no-drag;
+  }
+
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 75%, transparent);
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+}
+
+/* Slim, overlay-like scrollbars */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(128 128 128 / 0.35);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(128 128 128 / 0.55);
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+mark.hl {
+  background: var(--highlight);
+  color: var(--highlight-fg);
+  border-radius: 3px;
+  padding: 0 1px;
+  margin: 0 -1px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--fill) 25%, var(--fill-strong) 37%, var(--fill) 63%);
+  background-size: 400% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 6px;
+}
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
