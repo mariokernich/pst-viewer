@@ -467,6 +467,19 @@ fn saves_attachments_and_messages_to_files() {
     assert!(String::from_utf8_lossy(&fs::read(&target).unwrap()).contains("Subject: Agenda"));
 
     let eml = dir.path().join("memo.eml");
-    let size = session.save_eml(root, eml.to_string_lossy().into_owned()).unwrap();
+    let size = session.save_eml(root.clone(), eml.to_string_lossy().into_owned()).unwrap();
     assert_eq!(size as usize, fs::read(&eml).unwrap().len());
+
+    // Android hands over descriptors of the documents the user created.
+    #[cfg(unix)]
+    {
+        use std::os::fd::IntoRawFd;
+        let target = dir.path().join("notes.txt");
+        let fd = fs::File::create(&target).unwrap().into_raw_fd();
+        let saved = session.save_attachment_fd(root.clone(), 0, fd).unwrap();
+        assert_eq!(saved.size as usize, fs::read(&target).unwrap().len());
+        let fd = fs::File::create(dir.path().join("missing")).unwrap().into_raw_fd();
+        assert!(session.save_attachment_fd(root, 9, fd).is_err());
+        assert!(session.save_eml_fd(MessageRef { id: 999, path: vec![] }, -1).is_err());
+    }
 }

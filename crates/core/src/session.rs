@@ -77,18 +77,19 @@ enum Job {
     Prioritize(Option<u32>),
 }
 
-/// Where a file the user saves is written: a path or a file descriptor opened
-/// for writing (Android), which the core closes.
+/// Where a file the user saves is written: a path, or a file descriptor the
+/// app opened for writing (Android). The descriptor is owned from the start,
+/// so it is closed on every path, also when the job fails.
 enum Target {
     Path(String),
-    Fd(i32),
+    File(File),
 }
 
 impl Target {
     fn write(self, data: &[u8]) -> Result<()> {
         let mut file = match self {
             Target::Path(path) => File::create(&path).map_err(|e| CoreError::internal(format!("Cannot write {path}: {e}")))?,
-            Target::Fd(fd) => file_from_fd(fd)?,
+            Target::File(file) => file,
         };
         file.write_all(data)?;
         file.flush()?;
@@ -165,7 +166,8 @@ impl ArchiveSession {
     /// Like `save_attachment`, writing to a file descriptor opened for writing
     /// (e.g. a Storage Access Framework document); the core closes it.
     pub fn save_attachment_fd(&self, message_ref: MessageRef, index: u32, fd: i32) -> Result<AttachmentMeta> {
-        self.call(|reply| Job::SaveAttachment(message_ref, index, Target::Fd(fd), reply))
+        let file = file_from_fd(fd)?;
+        self.call(|reply| Job::SaveAttachment(message_ref, index, Target::File(file), reply))
     }
 
     /// The message as .eml (RFC 5322).
@@ -180,7 +182,8 @@ impl ArchiveSession {
 
     /// Like `save_eml`, writing to a file descriptor opened for writing; the core closes it.
     pub fn save_eml_fd(&self, message_ref: MessageRef, fd: i32) -> Result<i64> {
-        self.call(|reply| Job::SaveEml(message_ref, Target::Fd(fd), reply))
+        let file = file_from_fd(fd)?;
+        self.call(|reply| Job::SaveEml(message_ref, Target::File(file), reply))
     }
 
     /// Indexes the items of this folder first (usually the one on screen).

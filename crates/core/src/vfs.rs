@@ -93,7 +93,8 @@ pub(crate) fn file_from_fd(fd: i32) -> Result<File> {
     if fd < 0 {
         return Err(CoreError::read_failed("Invalid file descriptor"));
     }
-    // SAFETY: the app hands over ownership of an open, readable descriptor.
+    // SAFETY: the app hands over ownership of an open descriptor (readable, or
+    // writable for saving).
     Ok(unsafe { File::from_raw_fd(fd) })
 }
 
