@@ -12,7 +12,7 @@ The read-only mail archive engine of the iOS and Android apps, written in Rust a
 - **Export**: `.eml` (MIME messages unchanged, Outlook items rebuilt with attachments and original headers), print/PDF documents and plain text; attachments as files (attached items as `.eml`).
 - **Attachment previews**: iCalendar and vCard parsing, preview types, unsafe file types.
 
-Files are only opened for reading; PST files are handed to `outlook-pst` through `read_from` with a read-only handle, so the crate never holds a writable one.
+Archives are only opened for reading; PST files are handed to `outlook-pst` through `read_from` with a read-only handle, so the crate never holds a writable one. The only files the core writes are the ones the user saves (`saveAttachment`, `saveEml`).
 
 ## API (excerpt)
 
@@ -23,11 +23,14 @@ let result = try session.search(request: request)   // first page, groups, highl
 let more = try session.page(token: result.token, offset: 100, limit: 100)
 let detail = try session.message(messageRef: MessageRef(id: id, path: []))
 let doc = prepareMailDocument(html: detail.html!, inlineImages: detail.inlineImages, allowRemote: false, extraCss: css)
-let file = try session.attachment(messageRef: ref, index: 0)
-let eml = try session.exportEml(messageRef: ref)
+let file = try session.attachment(messageRef: ref, index: 0)                    // data in memory, e.g. for previews
+let meta = try session.saveAttachment(messageRef: ref, index: 0, path: url.path)  // written by the core, attached items as .eml
+let size = try session.saveEml(messageRef: ref, path: url.path)
 ```
 
-Android opens content URIs with `ArchiveSession.openWithAccess(root, access, listener, cancel)`: the app implements `FileAccess` (list a document tree, open a document as file descriptor), so large archives are read in place instead of being copied.
+The archive's unread total is `info.store.unreadCount` (messages in several folders or Gmail labels are counted once); each `AttachmentInfo` says whether it may be opened (`canOpen`) and how it is previewed (`previewKind`).
+
+Android opens content URIs with `ArchiveSession.openWithAccess(root, access, listener, cancel)`: the app implements `FileAccess` (list a document tree, open a document as file descriptor), so large archives are read in place instead of being copied. To save, it passes the descriptor of a document the user created (`saveAttachmentFd`, `saveEmlFd`, opened with mode `"wt"`); the core takes ownership and closes it, also when saving fails.
 
 All session methods block until the worker thread answers; call them from a background queue/coroutine. Listener callbacks arrive on the worker thread.
 
