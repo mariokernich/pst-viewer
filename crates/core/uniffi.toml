@@ -6,3 +6,11 @@ ffi_module_filename = "PstViewerCoreFFI"
 [bindings.kotlin]
 package_name = "de.kernich.pstviewer.core"
 cdylib_name = "pst_viewer_core"
+
+# Members that clash with Kotlin's AutoCloseable.close() and Throwable.message.
+[bindings.kotlin.rename]
+"ArchiveSession.close" = "close_archive"
+"CoreError.NotFound.message" = "reason"
+"CoreError.Unsupported.message" = "reason"
+"CoreError.ReadFailed.message" = "reason"
+"CoreError.Internal.message" = "reason"
