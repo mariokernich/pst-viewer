@@ -14,9 +14,14 @@ nonisolated struct AttachmentTransfer: Transferable {
         FileRepresentation(exportedContentType: .data) { item in
             // The core writes the file itself; the name is only known afterwards.
             let staging = try TemporaryFiles.location(named: "attachment")
-            let meta = try await item.connection.saveAttachment(item.ref, index: item.index, to: staging)
-            let name = sanitizeFileName(name: meta.fileName, fallback: "attachment")
-            return SentTransferredFile(try TemporaryFiles.finish(staging, named: name))
+            do {
+                let meta = try await item.connection.saveAttachment(item.ref, index: item.index, to: staging)
+                let name = sanitizeFileName(name: meta.fileName, fallback: "attachment")
+                return SentTransferredFile(try TemporaryFiles.finish(staging, named: name))
+            } catch {
+                TemporaryFiles.remove(staging)
+                throw error
+            }
         }
     }
 }
@@ -58,8 +63,13 @@ nonisolated struct MessageTransfer: Transferable {
 
     private func file() async throws -> SentTransferredFile {
         let url = try TemporaryFiles.location(named: fileName)
-        try await write(url)
-        return SentTransferredFile(try TemporaryFiles.finish(url))
+        do {
+            try await write(url)
+            return SentTransferredFile(try TemporaryFiles.finish(url))
+        } catch {
+            TemporaryFiles.remove(url)
+            throw error
+        }
     }
 }
 
