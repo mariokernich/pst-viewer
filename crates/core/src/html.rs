@@ -292,6 +292,7 @@ pre { white-space: pre-wrap; }
 a { color: #0a64d8; }
 blockquote[type="cite"] { margin: 0 0 0 0.8ex; border-left: 2px solid #c7c7cc; padding-left: 1ex; color: #48484a; }
 .pst-text { white-space: pre-wrap; margin: 0; font: inherit; }
+.pst-quote { border-left: 2px solid #c7c7cc; padding-left: 0.75em; color: #6e6e73; }
 "#;
 
 /// A sanitised, self-contained document for a WebView.
@@ -357,10 +358,25 @@ pub(crate) fn linkify(text: &str) -> String {
     out
 }
 
+/// Plain text as HTML lines with clickable links; quoted lines (starting
+/// with ">") get the class `pst-quote`, like in the desktop app.
+pub(crate) fn text_to_html(text: &str) -> String {
+    text.split('\n')
+        .map(|line| {
+            let content = if line.trim().is_empty() { "<br>".to_string() } else { linkify(line) };
+            if line.trim_start().starts_with('>') {
+                format!("<div class=\"pst-quote\">{content}</div>")
+            } else {
+                format!("<div>{content}</div>")
+            }
+        })
+        .collect()
+}
+
 /// A plain text body as document (same look and link handling as HTML mails).
 pub(crate) fn prepare_text_document(text: &str, extra_css: &str) -> MailDocument {
     let head = if extra_css.is_empty() { String::new() } else { format!("<style>{}</style>", STYLE_CLOSE.replace_all(extra_css, "")) };
-    let body = format!("<div class=\"pst-text\">{}</div>", linkify(text));
+    let body = format!("<div class=\"pst-text\">{}</div>", text_to_html(text));
     MailDocument { html: document("", &mail_csp(false), &head, "", &body), has_remote: false }
 }
 
@@ -394,6 +410,14 @@ mod tests {
         assert!(mail.body.contains("class=\"a\""));
         let allowed = sanitize_mail(html, &images, true);
         assert!(allowed.body.contains("https://tracker.example/p.gif"));
+    }
+
+    #[test]
+    fn marks_quoted_lines() {
+        assert_eq!(
+            text_to_html("Hallo\n\n> Zitat <b>\nEnde"),
+            "<div>Hallo</div><div><br></div><div class=\"pst-quote\">&#62; Zitat &#60;b&#62;</div><div>Ende</div>"
+        );
     }
 
     #[test]

@@ -9,7 +9,7 @@ use crate::error::Result;
 use crate::folders::{FolderIndex, FolderNode, compute_totals, sort_folders};
 use crate::html::referenced_content_ids;
 use crate::index::{IndexedItem, classify_attachment, collect_senders};
-use crate::model::{ArchiveFormat, OpenResult, SenderSuggestion, StoreInfo};
+use crate::model::{ArchiveFormat, ItemKind, OpenResult, SenderSuggestion, StoreInfo};
 use crate::text::fold_for_index;
 
 /// Where items come from: a PST file or local mail files.
@@ -77,6 +77,7 @@ pub(crate) fn build_index(
         display_name: display_name.to_string(),
         format,
         item_count: items.len() as u32,
+        unread_count: items.iter().filter(|i| !i.is_read && matches!(i.kind, ItemKind::Mail | ItemKind::Meeting)).count() as u32,
         folder_count: folders.list.len() as u32,
         date_min,
         date_max,

@@ -88,7 +88,7 @@ pub(crate) fn native_entry(path: &str) -> Result<DirEntry> {
 }
 
 #[cfg(unix)]
-fn file_from_fd(fd: i32) -> Result<File> {
+pub(crate) fn file_from_fd(fd: i32) -> Result<File> {
     use std::os::fd::FromRawFd;
     if fd < 0 {
         return Err(CoreError::read_failed("Invalid file descriptor"));
@@ -98,6 +98,6 @@ fn file_from_fd(fd: i32) -> Result<File> {
 }
 
 #[cfg(not(unix))]
-fn file_from_fd(_fd: i32) -> Result<File> {
+pub(crate) fn file_from_fd(_fd: i32) -> Result<File> {
     Err(CoreError::internal("File descriptors are not supported on this platform"))
 }

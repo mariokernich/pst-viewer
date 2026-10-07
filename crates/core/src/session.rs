@@ -7,6 +7,8 @@
 //! worker answers jobs between two items.
 
 use std::collections::{HashMap, VecDeque};
+use std::fs::File;
+use std::io::Write;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
@@ -23,12 +25,13 @@ use crate::files::{attachment_file_name, is_unsafe_to_open, preview_kind};
 use crate::index::collect_senders;
 use crate::local::LocalSource;
 use crate::model::{
-    AttachmentFile, IndexProgress, MessageDetail, MessageRef, MessageSummary, OpenProgress, OpenResult, SearchRequest, SearchResponse,
+    AttachmentFile, AttachmentMeta, IndexProgress, MessageDetail, MessageRef, MessageSummary, OpenProgress, OpenResult, SearchRequest,
+    SearchResponse,
 };
 use crate::pst::{PstSource, pst_format};
 use crate::search::run_search;
 use crate::text::{make_snippet, squash};
-use crate::vfs::{DirEntry, FileAccess, Vfs, native_entry};
+use crate::vfs::{DirEntry, FileAccess, Vfs, file_from_fd, native_entry};
 
 /// Progress reports of an archive, called on the archive's worker thread.
 #[uniffi::export(with_foreign)]
@@ -67,8 +70,30 @@ enum Job {
     Page(u64, u32, u32, Reply<Option<Vec<MessageSummary>>>),
     Message(MessageRef, Reply<MessageDetail>),
     Attachment(MessageRef, u32, Reply<AttachmentFile>),
+    AttachmentMeta(MessageRef, u32, Reply<AttachmentMeta>),
+    SaveAttachment(MessageRef, u32, Target, Reply<AttachmentMeta>),
     ExportEml(MessageRef, Reply<Vec<u8>>),
+    SaveEml(MessageRef, Target, Reply<i64>),
     Prioritize(Option<u32>),
+}
+
+/// Where a file the user saves is written: a path or a file descriptor opened
+/// for writing (Android), which the core closes.
+enum Target {
+    Path(String),
+    Fd(i32),
+}
+
+impl Target {
+    fn write(self, data: &[u8]) -> Result<()> {
+        let mut file = match self {
+            Target::Path(path) => File::create(&path).map_err(|e| CoreError::internal(format!("Cannot write {path}: {e}")))?,
+            Target::Fd(fd) => file_from_fd(fd)?,
+        };
+        file.write_all(data)?;
+        file.flush()?;
+        Ok(())
+    }
 }
 
 #[derive(uniffi::Object)]
@@ -125,9 +150,37 @@ impl ArchiveSession {
         self.call(|reply| Job::Attachment(message_ref, index, reply))
     }
 
+    /// File name and type of an attachment as it would be saved.
+    pub fn attachment_meta(&self, message_ref: MessageRef, index: u32) -> Result<AttachmentMeta> {
+        self.call(|reply| Job::AttachmentMeta(message_ref, index, reply))
+    }
+
+    /// Writes an attachment to a file the user chose (attached messages as
+    /// .eml), without copying it through the app. This and `save_eml` are the
+    /// only places where the core writes files.
+    pub fn save_attachment(&self, message_ref: MessageRef, index: u32, path: String) -> Result<AttachmentMeta> {
+        self.call(|reply| Job::SaveAttachment(message_ref, index, Target::Path(path), reply))
+    }
+
+    /// Like `save_attachment`, writing to a file descriptor opened for writing
+    /// (e.g. a Storage Access Framework document); the core closes it.
+    pub fn save_attachment_fd(&self, message_ref: MessageRef, index: u32, fd: i32) -> Result<AttachmentMeta> {
+        self.call(|reply| Job::SaveAttachment(message_ref, index, Target::Fd(fd), reply))
+    }
+
     /// The message as .eml (RFC 5322).
     pub fn export_eml(&self, message_ref: MessageRef) -> Result<Vec<u8>> {
         self.call(|reply| Job::ExportEml(message_ref, reply))
+    }
+
+    /// Writes the message as .eml to a file the user chose; returns the size.
+    pub fn save_eml(&self, message_ref: MessageRef, path: String) -> Result<i64> {
+        self.call(|reply| Job::SaveEml(message_ref, Target::Path(path), reply))
+    }
+
+    /// Like `save_eml`, writing to a file descriptor opened for writing; the core closes it.
+    pub fn save_eml_fd(&self, message_ref: MessageRef, fd: i32) -> Result<i64> {
+        self.call(|reply| Job::SaveEml(message_ref, Target::Fd(fd), reply))
     }
 
     /// Indexes the items of this folder first (usually the one on screen).
@@ -333,12 +386,39 @@ impl Worker {
                 let _ = reply.send(self.guarded(|w| w.message(message_ref)));
             }
             Job::Attachment(message_ref, index, reply) => {
-                let _ = reply.send(self.guarded(|w| w.attachment(message_ref, index)));
+                let _ = reply.send(self.guarded(|w| {
+                    let (meta, data) = w.attachment(message_ref, index, true)?;
+                    Ok(AttachmentFile {
+                        file_name: meta.file_name,
+                        mime_type: meta.mime_type,
+                        is_message: meta.is_message,
+                        can_open: meta.can_open,
+                        preview_kind: meta.preview_kind,
+                        data,
+                    })
+                }));
+            }
+            Job::AttachmentMeta(message_ref, index, reply) => {
+                let _ = reply.send(self.guarded(|w| Ok(w.attachment(message_ref, index, false)?.0)));
+            }
+            Job::SaveAttachment(message_ref, index, target, reply) => {
+                let _ = reply.send(self.guarded(|w| {
+                    let (meta, data) = w.attachment(message_ref, index, true)?;
+                    target.write(&data)?;
+                    Ok(meta)
+                }));
             }
             Job::ExportEml(message_ref, reply) => {
                 let _ = reply.send(self.guarded(|w| {
                     let message = w.resolve(&message_ref)?;
                     build_eml(&message, 0)
+                }));
+            }
+            Job::SaveEml(message_ref, target, reply) => {
+                let _ = reply.send(self.guarded(|w| {
+                    let data = build_eml(&w.resolve(&message_ref)?, 0)?;
+                    target.write(&data)?;
+                    Ok(data.len() as i64)
                 }));
             }
             Job::Prioritize(folder_id) => self.prioritize(folder_id),
@@ -442,19 +522,26 @@ impl Worker {
         Ok(message_detail(&message, message_ref, indexed))
     }
 
-    fn attachment(&mut self, message_ref: MessageRef, index: u32) -> Result<AttachmentFile> {
+    /// An attachment's file name, type and (with `with_data`) bytes; attached
+    /// Outlook items are converted to .eml.
+    fn attachment(&mut self, message_ref: MessageRef, index: u32, with_data: bool) -> Result<(AttachmentMeta, Vec<u8>)> {
         let message = self.resolve(&message_ref)?;
         let attachment = message.content().attachments.get(index as usize).ok_or_else(|| CoreError::not_found("Attachment not found"))?;
-        let data = if attachment.is_outlook_item() { build_eml(&attachment.open_message()?, 0)? } else { attachment.read()? };
+        let data = match (with_data, attachment.is_outlook_item()) {
+            (false, _) => Vec::new(),
+            (true, true) => build_eml(&attachment.open_message()?, 0)?,
+            (true, false) => attachment.read()?,
+        };
         let file_name = attachment_file_name(&attachment.name, attachment.is_message);
         let mime_type = if attachment.is_message { "message/rfc822".to_string() } else { attachment.mime_type.clone() };
-        Ok(AttachmentFile {
+        let meta = AttachmentMeta {
             can_open: !is_unsafe_to_open(&file_name, &mime_type),
             preview_kind: preview_kind(&file_name, &mime_type, attachment.is_message),
             file_name,
             mime_type,
             is_message: attachment.is_message,
-            data,
-        })
+            size: if with_data { data.len() as i64 } else { attachment.size },
+        };
+        Ok((meta, data))
     }
 }

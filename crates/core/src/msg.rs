@@ -36,8 +36,54 @@ pub(crate) struct MsgFile {
     named: Rc<NamedMap>,
 }
 
+/// Marks FAT entries of sectors beyond the end of the file as free. Some
+/// writers (e.g. SheetJS `cfb`) leave end-of-chain markers there, which the
+/// `cfb` crate rejects as a malformed FAT. Valid chains never reference such
+/// sectors, so nothing readable changes.
+fn repair_fat(data: &mut [u8]) {
+    const FREESECT: u32 = 0xFFFF_FFFF;
+    const MAX_REGULAR: u32 = 0xFFFF_FFFA;
+    let u16_at = |d: &[u8], o: usize| d.get(o..o + 2).map(|b| u16::from_le_bytes([b[0], b[1]]));
+    let u32_at = |d: &[u8], o: usize| d.get(o..o + 4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]));
+    let Some(shift @ (9 | 12)) = u16_at(data, 30) else { return };
+    let sector = 1usize << shift;
+    let sector_count = (data.len().saturating_sub(sector) / sector) as u64;
+    let offset = |s: u32| sector + s as usize * sector;
+
+    // FAT sector numbers: 109 in the header, more in the DIFAT chain.
+    let mut fat_sectors: Vec<u32> = (0..109).filter_map(|i| u32_at(data, 76 + i * 4)).filter(|s| *s <= MAX_REGULAR).collect();
+    let mut difat = u32_at(data, 68).unwrap_or(FREESECT);
+    let mut guard = 0;
+    while difat <= MAX_REGULAR && u64::from(difat) < sector_count && guard < 10_000 {
+        let base = offset(difat);
+        for i in 0..(sector / 4 - 1) {
+            if let Some(s) = u32_at(data, base + i * 4).filter(|s| *s <= MAX_REGULAR) {
+                fat_sectors.push(s);
+            }
+        }
+        difat = u32_at(data, base + sector - 4).unwrap_or(FREESECT);
+        guard += 1;
+    }
+
+    let per_sector = sector / 4;
+    for (n, fat) in fat_sectors.iter().enumerate() {
+        if u64::from(*fat) >= sector_count {
+            continue;
+        }
+        let base = offset(*fat);
+        for i in 0..per_sector {
+            let entry = (n * per_sector + i) as u64;
+            let at = base + i * 4;
+            if entry >= sector_count && u32_at(data, at).is_some_and(|v| v != FREESECT) {
+                data[at..at + 4].copy_from_slice(&FREESECT.to_le_bytes());
+            }
+        }
+    }
+}
+
 impl MsgFile {
-    pub fn open(data: Vec<u8>) -> Result<Rc<MsgFile>> {
+    pub fn open(mut data: Vec<u8>) -> Result<Rc<MsgFile>> {
+        repair_fat(&mut data);
         let cfb =
             cfb::CompoundFile::open(Cursor::new(data)).map_err(|e| CoreError::unsupported(format!("Not an Outlook item file: {e}")))?;
         let file = MsgFile { cfb: RefCell::new(cfb), named: Rc::new(NamedMap::default()) };

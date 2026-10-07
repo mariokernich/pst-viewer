@@ -18,7 +18,13 @@ fn main() {
         std::thread::sleep(Duration::from_millis(10));
     }
     let info = session.info().unwrap();
-    println!("{:?}: {} items, {} folders, indexed in {:?}", info.store.format, info.store.item_count, info.store.folder_count, started.elapsed());
+    println!(
+        "{:?}: {} items, {} folders, indexed in {:?}",
+        info.store.format,
+        info.store.item_count,
+        info.store.folder_count,
+        started.elapsed()
+    );
     for f in &info.folders {
         println!("{}{} {:?} ({} items, {} unread)", "  ".repeat(f.depth as usize), f.name, f.special, f.item_count, f.unread_count);
     }

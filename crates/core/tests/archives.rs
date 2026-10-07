@@ -431,3 +431,42 @@ fn snippets_and_highlights() {
     let ranges = find_matches(preview.clone(), result.highlight_terms.clone());
     assert_eq!(ranges.len(), 1);
 }
+
+#[test]
+fn msg_written_by_sheetjs() {
+    // SheetJS cfb leaves end-of-chain markers in the FAT beyond the end of the file.
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sheetjs-besprechung.msg");
+    let session = open(&path);
+    let result = session.search(request("")).unwrap();
+    assert_eq!(result.items[0].subject, "Protokoll Besprechung");
+    let detail = session.message(MessageRef { id: result.items[0].id, path: vec![] }).unwrap();
+    assert!(detail.html.as_deref().unwrap().contains("Budget freigegeben"));
+}
+
+#[test]
+fn saves_attachments_and_messages_to_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("memo.msg");
+    fs::write(&path, memo_msg()).unwrap();
+    let session = open(&path);
+    let id = session.search(request("")).unwrap().items[0].id;
+    let root = MessageRef { id, path: vec![] };
+
+    let detail = session.message(root.clone()).unwrap();
+    assert_eq!(
+        detail.attachments.iter().map(|a| (a.preview_kind, a.can_open)).collect::<Vec<_>>(),
+        vec![(PreviewKind::Text, true), (PreviewKind::Message, true)]
+    );
+    assert_eq!(session.info().unwrap().store.unread_count, 0);
+
+    let meta = session.attachment_meta(root.clone(), 1).unwrap();
+    assert_eq!(meta.file_name, "Agenda.eml");
+    let target = dir.path().join("agenda.eml");
+    let saved = session.save_attachment(root.clone(), 1, target.to_string_lossy().into_owned()).unwrap();
+    assert_eq!(saved.size as usize, fs::read(&target).unwrap().len());
+    assert!(String::from_utf8_lossy(&fs::read(&target).unwrap()).contains("Subject: Agenda"));
+
+    let eml = dir.path().join("memo.eml");
+    let size = session.save_eml(root, eml.to_string_lossy().into_owned()).unwrap();
+    assert_eq!(size as usize, fs::read(&eml).unwrap().len());
+}

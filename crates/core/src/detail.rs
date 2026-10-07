@@ -6,6 +6,7 @@ use std::collections::{HashMap, HashSet};
 use base64::Engine;
 
 use crate::content::{ContentAttachment, MessageContent, Resolved};
+use crate::files::{attachment_file_name, is_unsafe_to_open, preview_kind};
 use crate::html::referenced_content_ids;
 use crate::index::{IndexedItem, importance_from_value, kind_of};
 use crate::mapi::tag;
@@ -101,13 +102,18 @@ fn body_and_attachments(content: &MessageContent) -> BodyParts {
         .attachments
         .iter()
         .enumerate()
-        .map(|(i, a)| AttachmentInfo {
-            index: i as u32,
-            name: a.name.clone(),
-            size: a.size,
-            mime_type: a.mime_type.clone(),
-            is_inline: a.hidden || (!a.content_id.is_empty() && cids.contains(&a.content_id)),
-            is_message: a.is_message,
+        .map(|(i, a)| {
+            let file_name = attachment_file_name(&a.name, a.is_message);
+            AttachmentInfo {
+                index: i as u32,
+                name: a.name.clone(),
+                size: a.size,
+                mime_type: a.mime_type.clone(),
+                is_inline: a.hidden || (!a.content_id.is_empty() && cids.contains(&a.content_id)),
+                is_message: a.is_message,
+                can_open: !is_unsafe_to_open(&file_name, &a.mime_type),
+                preview_kind: preview_kind(&file_name, &a.mime_type, a.is_message),
+            }
         })
         .collect();
     let format = if content.html.is_some() {

@@ -75,6 +75,8 @@ pub struct StoreInfo {
     pub display_name: String,
     pub format: ArchiveFormat,
     pub item_count: u32,
+    /// Unread messages (each counted once, also when it is in several folders).
+    pub unread_count: u32,
     pub folder_count: u32,
     pub date_min: Option<i64>,
     pub date_max: Option<i64>,
@@ -344,6 +346,21 @@ pub struct AttachmentInfo {
     pub is_inline: bool,
     /// An attached message (Outlook item or .eml).
     pub is_message: bool,
+    /// False for file types that could run code; those can only be saved.
+    pub can_open: bool,
+    pub preview_kind: PreviewKind,
+}
+
+/// File name and type of an attachment as it is saved (attached messages as .eml).
+#[derive(uniffi::Record, Clone, Debug, PartialEq, Eq)]
+pub struct AttachmentMeta {
+    pub file_name: String,
+    pub mime_type: String,
+    pub is_message: bool,
+    pub can_open: bool,
+    pub preview_kind: PreviewKind,
+    /// Bytes written.
+    pub size: i64,
 }
 
 #[derive(uniffi::Record, Clone, Debug, PartialEq)]
