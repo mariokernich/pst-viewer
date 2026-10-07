@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Envelope and magnifier of apps/ios/Config/AppIcon.svg, placed like on iOS. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.4922"
+        android:scaleY="0.4922"
+        android:translateX="22.5"
+        android:translateY="22.5">
+        <path android:pathData="M28,32h52a10,10 0,0 1,10 10v32a10,10 0,0 1,-10 10h-52a10,10 0,0 1,-10 -10v-32a10,10 0,0 1,10 -10z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:endColor="#FFE8ECFF"
+                    android:endX="0"
+                    android:endY="84"
+                    android:startColor="#FFFFFFFF"
+                    android:startX="0"
+                    android:startY="32"
+                    android:type="linear" />
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M27,41L54,60.5L81,41"
+            android:strokeWidth="5"
+            android:strokeColor="#FF5A6CFF"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M84,63a17,17 0,1 1,0 34a17,17 0,1 1,0 -34z" />
+        <path
+            android:pathData="M91.5,87.5l9,9"
+            android:strokeWidth="11"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M91.5,87.5l9,9"
+            android:strokeWidth="5.5"
+            android:strokeColor="#FF4A5CFF"
+            android:strokeLineCap="round" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M84,69.5a10.5,10.5 0,1 1,0 21a10.5,10.5 0,1 1,0 -21z"
+            android:strokeWidth="5"
+            android:strokeColor="#FF4A5CFF" />
+    </group>
+</vector>

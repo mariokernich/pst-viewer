@@ -1,0 +1,4 @@
+# Release signing (see README): never commit keys or passwords.
+keystore.properties
+*.jks
+*.keystore

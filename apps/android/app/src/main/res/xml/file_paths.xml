@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only copies of attachments and exports shared with other apps (see TempFiles). -->
+<paths>
+    <cache-path
+        name="previews"
+        path="previews/" />
+    <cache-path
+        name="exports"
+        path="exports/" />
+</paths>

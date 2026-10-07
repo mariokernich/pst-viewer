@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI strings (English). Wording follows apps/desktop/src/renderer/src/i18n.ts. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">PST Viewer</string>
+    <string name="tagline">Open, search and read mail archives – fast and strictly read-only.</string>
+    <string name="open_file">Open File…</string>
+    <string name="open_folder">Open Folder…</string>
+    <string name="open_hint">Outlook data files (.pst), Outlook items (.msg), emails (.eml) and mailboxes (MBOX, e.g. from Gmail, Apple Mail or Thunderbird).</string>
+    <string name="supported_formats">Supported formats</string>
+    <string name="read_only_note">Your files are only read and never modified.</string>
+    <string name="read_only">Read-only</string>
+    <string name="recent_files">Recent Files</string>
+    <string name="no_recent_files">No files opened yet</string>
+    <string name="no_recent_files_hint">Files you open appear here so you can reopen them with a single tap.</string>
+    <string name="clear_list">Clear List</string>
+    <string name="remove_from_list">Remove from List</string>
+    <string name="file_missing">Not found</string>
+    <string name="opened_ago">opened %1$s</string>
+
+    <string name="loading_title">Opening %1$s</string>
+    <string name="loading_opening">Opening file…</string>
+    <string name="loading_scanning">Looking for messages…</string>
+    <string name="loading_scan_bytes">%1$s of %2$s read</string>
+    <string name="loading_found">%1$s messages found</string>
+    <string name="loading_indexing">Indexing items…</string>
+    <string name="loading_finishing">Finishing search index…</string>
+    <string name="loading_progress">%1$s of %2$s items</string>
+    <string name="loading_folder">Folder: %1$s</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="error_title">The file could not be opened</string>
+    <string name="error_not_found">The file was not found. It may have been moved, renamed or deleted.</string>
+    <string name="error_not_pst">The file is not a supported mail file (PST, MSG, EML, MBOX), it is damaged, or the folder contains no emails.</string>
+    <string name="error_read_failed">An error occurred while reading the file.</string>
+    <string name="error_not_open">No file is open.</string>
+    <string name="error_canceled">The operation was canceled.</string>
+    <string name="error_unknown">An unexpected error occurred.</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="retry">Try Again</string>
+
+    <string name="folders">Folders</string>
+    <string name="show_folders">Show folders</string>
+    <string name="all_items">All Items</string>
+    <string name="show_empty_folders">Show Empty Folders</string>
+    <string name="hide_empty_folders">Hide Empty Folders</string>
+    <string name="close_file">Close File</string>
+    <string name="open_other_file">Open Another File…</string>
+    <string name="file_info">File Information</string>
+    <string name="store_range">%1$s – %2$s</string>
+    <string name="indexing">Full-text index: %1$d%%</string>
+    <string name="indexing_hint">Message contents are still being indexed (%1$d%%). Matches in message bodies may be missing.</string>
+    <string name="expand_folder">Expand</string>
+    <string name="collapse_folder">Collapse</string>
+    <string name="format_pst">Outlook data file</string>
+    <string name="format_pst_ansi">Outlook data file (97–2002)</string>
+    <string name="format_mbox">MBOX mailbox</string>
+    <string name="format_eml">Email file</string>
+    <string name="format_msg">Outlook item</string>
+    <string name="format_folder">Folder with emails</string>
+    <string name="format_unknown">Mail archive</string>
+
+    <string name="search_placeholder">Search</string>
+    <string name="search_placeholder_in">Search in “%1$s”</string>
+    <string name="search_all">Search for “%1$s” in all fields</string>
+    <string name="search_in">“%1$s” in %2$s only</string>
+    <string name="suggestions_senders">Senders</string>
+    <string name="suggestions_folders">Folders</string>
+    <string name="suggestions_search_in">Search in</string>
+    <string name="suggestions_recent">Recent Searches</string>
+    <string name="suggestions_quick">Quick Filters</string>
+    <string name="suggestion_from">From %1$s</string>
+    <string name="suggestion_folder">Go to folder “%1$s”</string>
+    <string name="search_syntax">Search Syntax</string>
+    <string name="clear_search">Clear search</string>
+    <string name="filters">Filters</string>
+    <string name="filters_active" tools:ignore="PluralsCandidate">%1$d active</string>
+    <string name="reset_filters">Reset</string>
+    <string name="reset_all">Reset all</string>
+    <!-- Search keywords; they must match the query syntax of the core (crates/core). -->
+    <string name="search_prefix_subject">subject</string>
+    <string name="search_prefix_from">from</string>
+    <string name="search_prefix_body">body</string>
+
+    <string name="filter_search_in">Search in</string>
+    <string name="field_subject">Subject</string>
+    <string name="field_from">Sender</string>
+    <string name="field_to">Recipients</string>
+    <string name="field_body">Body</string>
+    <string name="field_attachments">Attachment names</string>
+    <string name="filter_date">Date</string>
+    <string name="date_any">Any time</string>
+    <string name="date_today">Today</string>
+    <string name="date_week">7 days</string>
+    <string name="date_month">30 days</string>
+    <string name="date_year">12 months</string>
+    <string name="date_custom">Range…</string>
+    <string name="date_range_title">Choose a date range</string>
+    <string name="ok">OK</string>
+    <string name="filter_people">People</string>
+    <string name="filter_from_placeholder">Sender (name or address)</string>
+    <string name="filter_to_placeholder">Recipient (name or address)</string>
+    <string name="filter_status">Status</string>
+    <string name="read_any">All</string>
+    <string name="read_unread">Unread</string>
+    <string name="read_read">Read</string>
+    <string name="flag_has_attachments">Has attachments</string>
+    <string name="flag_important">Important</string>
+    <string name="flag_flagged">Flagged</string>
+    <string name="filter_attachment_type">Attachment type</string>
+    <string name="att_pdf">PDF</string>
+    <string name="att_image">Images</string>
+    <string name="att_office">Office</string>
+    <string name="att_archive">Archives</string>
+    <string name="att_calendar">Calendar</string>
+    <string name="att_message">Emails</string>
+    <string name="filter_kinds">Item type</string>
+    <string name="filter_size">Minimum size</string>
+    <string name="size_any">Any</string>
+    <string name="size_at_least">≥ %1$s</string>
+
+    <string name="chip_date">Date: %1$s</string>
+    <string name="chip_from">From: %1$s</string>
+    <string name="chip_to">To: %1$s</string>
+    <string name="chip_fields">Only: %1$s</string>
+    <string name="chip_kinds">Type: %1$s</string>
+    <string name="chip_size">From %1$s</string>
+    <string name="chip_attachment_type">Attachment: %1$s</string>
+
+    <string name="scope_all">All Folders</string>
+    <string name="search_results">Search Results</string>
+    <plurals name="result_count">
+        <item quantity="one">1 result</item>
+        <item quantity="other">%1$s results</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">1 item</item>
+        <item quantity="other">%1$s items</item>
+    </plurals>
+    <string name="unread_count">%1$s unread</string>
+    <string name="sort_by">Sort</string>
+    <string name="sort_by_field">Sort: %1$s</string>
+    <string name="sort_date">Date</string>
+    <string name="sort_from">Sender</string>
+    <string name="sort_subject">Subject</string>
+    <string name="sort_size">Size</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_asc">Ascending</string>
+    <string name="sort_desc">Descending</string>
+    <string name="empty_folder">This folder is empty</string>
+    <string name="empty_folder_hint">Choose another folder.</string>
+    <string name="no_results">No results</string>
+    <string name="no_results_hint">Try different search terms or remove some filters.</string>
+    <string name="search_everywhere">Search all folders</string>
+    <string name="no_subject">(No subject)</string>
+    <string name="no_sender">(Unknown sender)</string>
+
+    <string name="group_today">Today</string>
+    <string name="group_yesterday">Yesterday</string>
+    <string name="group_this_week">This Week</string>
+    <string name="group_last_week">Last Week</string>
+    <string name="group_this_month">This Month</string>
+    <string name="group_unknown">No Date</string>
+
+    <string name="no_selection">No message selected</string>
+    <string name="no_selection_hint">Select a message from the list to read it here.</string>
+    <string name="loading_message">Loading message…</string>
+    <string name="message_error">The message could not be loaded.</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="cc">Cc</string>
+    <string name="bcc">Bcc</string>
+    <string name="reply_to">Reply to</string>
+    <string name="on_behalf_of">%1$s on behalf of %2$s</string>
+    <string name="more_recipients" tools:ignore="PluralsCandidate">+%1$d more</string>
+    <string name="show_less">Less</string>
+    <plurals name="attachments">
+        <item quantity="one">1 attachment</item>
+        <item quantity="other">%1$s attachments</item>
+    </plurals>
+    <string name="save_all">Save All</string>
+    <string name="open_attached_message">Open Message</string>
+    <string name="attached_message">Attached message</string>
+    <string name="saved">Saved</string>
+    <plurals name="files_saved">
+        <item quantity="one">%1$d file saved</item>
+        <item quantity="other">%1$d files saved</item>
+    </plurals>
+    <string name="save_failed">Saving failed</string>
+    <string name="remote_blocked">Remote images were blocked to protect your privacy.</string>
+    <string name="load_remote">Load Images</string>
+    <string name="importance_high">Important</string>
+    <string name="flagged">Flagged</string>
+    <string name="signed">Digitally signed</string>
+    <string name="encrypted">Encrypted</string>
+    <string name="encrypted_hint">This message is encrypted (S/MIME) and cannot be displayed without the private key.</string>
+    <string name="unread">Unread</string>
+    <string name="show_headers">Headers</string>
+    <string name="headers_title">Internet Headers</string>
+    <string name="no_headers">No internet headers are stored for this message.</string>
+    <string name="copy">Copy</string>
+    <string name="copied">Copied</string>
+    <string name="view_html">HTML</string>
+    <string name="view_text">Text</string>
+    <string name="body_empty">This message has no content.</string>
+    <string name="folder">Folder</string>
+    <string name="close">Close</string>
+    <string name="appointment_when">When</string>
+    <string name="appointment_where">Where</string>
+    <string name="all_day">All day</string>
+    <string name="recurring">Recurring</string>
+    <string name="attendees">Attendees</string>
+    <string name="task_status">Status</string>
+    <string name="task_due">Due</string>
+    <string name="task_start">Start</string>
+    <string name="task_owner">Owner</string>
+    <string name="percent_complete">%1$d%% complete</string>
+    <string-array name="task_status_values">
+        <item>Not started</item>
+        <item>In progress</item>
+        <item>Completed</item>
+        <item>Waiting on someone else</item>
+        <item>Deferred</item>
+    </string-array>
+    <string name="contact_company">Company</string>
+    <string name="contact_job_title">Job title</string>
+    <string name="contact_department">Department</string>
+    <string name="contact_email">Email</string>
+    <string name="contact_email2">Email 2</string>
+    <string name="contact_email3">Email 3</string>
+    <string name="contact_business_phone">Business phone</string>
+    <string name="contact_mobile_phone">Mobile</string>
+    <string name="contact_home_phone">Home phone</string>
+    <string name="contact_business_fax">Fax</string>
+    <string name="contact_business_address">Business address</string>
+    <string name="contact_home_address">Home address</string>
+    <string name="contact_other_address">Other address</string>
+    <string name="contact_website">Website</string>
+    <string name="contact_personal_website">Personal website</string>
+    <string name="contact_im">Chat</string>
+    <string name="contact_birthday">Birthday</string>
+    <string name="contact_anniversary">Anniversary</string>
+
+    <string name="kind_mail">Emails</string>
+    <string name="kind_meeting">Meetings</string>
+    <string name="kind_appointment">Appointments</string>
+    <string name="kind_contact">Contacts</string>
+    <string name="kind_task">Tasks</string>
+    <string name="kind_note">Notes</string>
+    <string name="kind_journal">Journal</string>
+    <string name="kind_other">Other</string>
+    <string name="kind_single_mail">Email</string>
+    <string name="kind_single_meeting">Meeting request</string>
+    <string name="kind_single_appointment">Appointment</string>
+    <string name="kind_single_contact">Contact</string>
+    <string name="kind_single_task">Task</string>
+    <string name="kind_single_note">Note</string>
+    <string name="kind_single_journal">Journal entry</string>
+    <string name="kind_single_other">Item</string>
+
+    <string name="special_inbox">Inbox</string>
+    <string name="special_drafts">Drafts</string>
+    <string name="special_sent">Sent Items</string>
+    <string name="special_deleted">Deleted Items</string>
+    <string name="special_archive">Archive</string>
+    <string name="special_junk">Junk Email</string>
+    <string name="special_outbox">Outbox</string>
+    <string name="special_calendar">Calendar</string>
+    <string name="special_contacts">Contacts</string>
+    <string name="special_tasks">Tasks</string>
+    <string name="special_notes">Notes</string>
+    <string name="special_journal">Journal</string>
+    <string name="special_sync_issues">Sync Issues</string>
+    <string name="special_rss">RSS Feeds</string>
+
+    <string name="help_title">Search Syntax</string>
+    <string name="help_intro">Combine search terms and operators freely. All terms must match. Case and accents are ignored.</string>
+    <string name="help_try">Tap an example to try it.</string>
+    <string-array name="help_examples" tools:ignore="TypographyDashes">
+        <item>invoice 2024</item>
+        <item>\"kind regards\"</item>
+        <item>offer OR quote</item>
+        <item>-newsletter</item>
+        <item>from:anna</item>
+        <item>to:bob</item>
+        <item>subject:vacation</item>
+        <item>body:contract</item>
+        <item>attachment:pdf</item>
+        <item>has:attachment</item>
+        <item>is:unread</item>
+        <item>after:2024-03-01 before:2024-06</item>
+        <item>larger:5mb</item>
+        <item>type:appointment</item>
+        <item>folder:archive</item>
+    </string-array>
+    <string-array name="help_descriptions" tools:ignore="TypographyDashes">
+        <item>All terms must match</item>
+        <item>Exact phrase</item>
+        <item>Either term</item>
+        <item>Exclude a term</item>
+        <item>Sender (name or address)</item>
+        <item>Recipients (To, Cc, Bcc)</item>
+        <item>Subject only</item>
+        <item>Message body only</item>
+        <item>Attachment name contains “pdf”</item>
+        <item>Only messages with attachments</item>
+        <item>Unread (also: is:read, is:important, is:flagged, is:signed)</item>
+        <item>Date range (also: date:2023, until:2024-12-31)</item>
+        <item>Minimum size (also: smaller:100kb)</item>
+        <item>Item type: mail, appointment, contact, task, note</item>
+        <item>Only in folders with this name</item>
+    </string-array>
+    <string name="help_english">German operators such as von:, an:, betreff:, hat:anhang, ist:ungelesen, vor:, nach: work as well.</string>
+
+    <string name="previous_message">Previous message</string>
+    <string name="next_message">Next message</string>
+
+    <string name="date_label">Date</string>
+    <string name="type_label">Type</string>
+    <string name="attachments_label">Attachments</string>
+    <string name="subject_label">Subject</string>
+    <string name="export_menu">Export</string>
+    <string name="export_pdf">Export as PDF…</string>
+    <string name="export_eml">Export as Email File (.eml)…</string>
+    <string name="export_text">Export as Text…</string>
+    <string name="print">Print…</string>
+    <string name="share_pdf">Share as PDF…</string>
+    <string name="exported">Exported</string>
+    <string name="export_failed">Export failed</string>
+    <string name="print_failed">Printing failed</string>
+    <string name="preparing_export">Preparing export…</string>
+    <string name="preview">Preview</string>
+    <string name="open_with">Open with…</string>
+    <string name="save_as">Save As…</string>
+    <string name="share">Share…</string>
+    <string name="previous_attachment">Previous attachment</string>
+    <string name="next_attachment">Next attachment</string>
+    <string name="attachment_position">%1$d of %2$d</string>
+    <string name="no_preview">No preview for this file type</string>
+    <string name="no_preview_hint">Open the file in a matching app. It opens as a read-only copy that is deleted afterwards.</string>
+    <string name="blocked_type">This file type can run programs and is therefore not opened directly. Only save the file if you trust the sender.</string>
+    <string name="preview_truncated">Large file – showing the first %1$s.</string>
+    <string name="preview_rows_truncated">Large file – showing the first %1$s rows.</string>
+    <string name="preview_failed">The preview could not be loaded.</string>
+    <string name="organizer">Organizer</string>
+    <string name="method_request">Invitation</string>
+    <string name="method_cancel">Canceled</string>
+    <string name="method_reply">Reply</string>
+    <string name="method_publish">Event</string>
+    <string name="partstat_accepted">Accepted</string>
+    <string name="partstat_declined">Declined</string>
+    <string name="partstat_tentative">Tentative</string>
+    <string name="partstat_needs_action">Pending</string>
+    <string name="show_source">Show source</string>
+    <string name="hide_source">Hide source</string>
+    <string name="no_events">The file contains no events.</string>
+    <string name="no_contacts">The file contains no contacts.</string>
+    <string name="vcard_email">Email</string>
+    <string name="vcard_phone">Phone</string>
+    <string name="vcard_address">Address</string>
+    <string name="vcard_url">Website</string>
+    <string name="vcard_birthday">Birthday</string>
+    <string name="vcard_note">Note</string>
+    <string name="error_blocked">This file type is not opened directly for security reasons.</string>
+    <string name="error_open_failed">The file could not be opened – there may be no app installed for it.</string>
+    <string name="link_open_failed">No app can open this link.</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    <string name="pdf_page">Page %1$d of %2$d</string>
+
+    <string name="back">Back</string>
+    <string name="more_options">More options</string>
+    <string name="settings">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="dynamic_color">Dynamic color</string>
+    <string name="dynamic_color_summary">Use the colors of your wallpaper</string>
+    <string name="language">Language</string>
+    <string name="language_system">System</string>
+    <string name="language_german" translatable="false">Deutsch</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="clear_recent_files">Clear recent files</string>
+    <string name="recent_files_cleared">Recent files cleared</string>
+    <string name="about">About PST Viewer</string>
+    <string name="version">Version</string>
+    <string name="core_version">Mail archive engine</string>
+    <string name="privacy">Privacy</string>
+    <string name="privacy_text">PST Viewer does not collect, store or share any personal data. Your mail archives are only read on this device and are never uploaded or modified. The app contains no ads, no analytics and no tracking. It only connects to the internet to load the remote images of a message after you tap “Load Images”; links you tap open in your browser.</string>
+    <string name="licenses">Open-source licenses</string>
+    <string name="licenses_summary">Libraries that PST Viewer is built with</string>
+    <string name="licenses_app">App</string>
+    <string name="licenses_core">Mail archive engine (Rust)</string>
+    <string name="licenses_used_under">Used under %1$s</string>
+</resources>

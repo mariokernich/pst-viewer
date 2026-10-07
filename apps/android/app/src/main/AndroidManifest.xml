@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Only for remote images of a message after the user allowed them, inside the WebView. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".PstViewerApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PstViewer"
+        tools:targetApi="37">
+
+        <!-- No usage statistics of the WebView are sent to Google. -->
+        <meta-data
+            android:name="android.webkit.WebView.MetricsOptOut"
+            android:value="true" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Mail files from file managers, mail apps and downloads. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/vnd.ms-outlook" />
+                <data android:mimeType="application/vnd.ms-outlook-pst" />
+                <data android:mimeType="message/rfc822" />
+                <data android:mimeType="application/mbox" />
+                <data android:mimeType="application/x-mbox" />
+            </intent-filter>
+            <!-- Files whose type the provider does not know, by their extension. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:pathPattern=".*\\.pst" />
+                <data android:pathPattern=".*\\.PST" />
+                <data android:pathPattern=".*\\.msg" />
+                <data android:pathPattern=".*\\.MSG" />
+                <data android:pathPattern=".*\\.eml" />
+                <data android:pathPattern=".*\\.EML" />
+                <data android:pathPattern=".*\\.mbox" />
+                <data android:pathPattern=".*\\.MBOX" />
+            </intent-filter>
+            <!-- "Share" a mail file to the app. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.ms-outlook" />
+                <data android:mimeType="application/vnd.ms-outlook-pst" />
+                <data android:mimeType="message/rfc822" />
+                <data android:mimeType="application/mbox" />
+                <data android:mimeType="application/x-mbox" />
+            </intent-filter>
+        </activity>
+
+        <!-- Read-only copies of attachments and exports handed to other apps. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Keeps the per-app language on Android 12 and older (AppCompat). -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+    </application>
+</manifest>
