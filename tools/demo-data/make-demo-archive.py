@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Creates a fictional demo mailbox for tests, app screenshots and store listings.
 
-    tools/demo-data/make-demo-archive.py [output directory]
+    tools/demo-data/make-demo-archive.py [--lang de|en] [output directory]
 
-Writes "Demo-Postfach.mbox" (Google Takeout style with labels, read/starred
+Writes "Demo-Postfach.mbox" ("Demo-Mailbox.mbox" in English) (Google Takeout style with labels, read/starred
 state, HTML mails, inline images and PDF, PNG, ICS, VCF, CSV and EML
 attachments; dates relative to today) and a folder "Demo-Ordner" with .eml
-files. All people, companies and addresses are made up.
+files ("Demo-Folder"). All people, companies and addresses are made up.
 """
 
 import datetime as dt
@@ -18,8 +18,14 @@ from email.message import EmailMessage
 from email.policy import SMTP
 from pathlib import Path
 
-OUT = Path(sys.argv[1] if len(sys.argv) > 1 else "demo-archive")
-ME = ("Mario Beispiel", "mario@beispiel-mail.de")
+ARGS = sys.argv[1:]
+LANG = "de"
+if ARGS[:1] == ["--lang"] and len(ARGS) > 1:
+    LANG, ARGS = ARGS[1], ARGS[2:]
+if LANG not in ("de", "en"):
+    sys.exit("--lang must be de or en")
+OUT = Path(ARGS[0] if ARGS else "demo-archive")
+ME = ("Mario Beispiel", "mario@beispiel-mail.de") if LANG == "de" else ("Alex Morgan", "alex@example-mail.com")
 NOW = dt.datetime.now().astimezone().replace(second=0, microsecond=0)
 
 PEOPLE = {
@@ -32,6 +38,18 @@ PEOPLE = {
     "news": ("Fachmagazin Digital", "newsletter@fachmagazin-digital.de"),
     "bank": ("Muster Bank", "service@musterbank.example"),
     "julia": ("Julia Neumann", "julia.neumann@nordwind-design.de"),
+}
+
+PEOPLE_EN = {
+    "anna": ("Emma Clarke", "emma.clarke@northwind-design.example"),
+    "jonas": ("Daniel Brooks", "d.brooks@brooks-it.example"),
+    "lena": ("Olivia Hughes", "olivia.hughes@riverton-utilities.example"),
+    "tim": ("Ryan Foster", "ryan@foster-exhibits.example"),
+    "sara": ("Priya Shah", "p.shah@shah-legal.example"),
+    "felix": ("Lucas Bennett", "lucas.bennett@example-mail.com"),
+    "news": ("Digital Business Weekly", "newsletter@digital-business-weekly.example"),
+    "bank": ("Sample Bank", "service@samplebank.example"),
+    "julia": ("Sophie Turner", "sophie.turner@northwind-design.example"),
 }
 
 
@@ -94,7 +112,7 @@ def ics(summary: str, start: dt.datetime, minutes: int, location: str, organizer
         "PRODID:-//PST Viewer//Demo//DE",
         "METHOD:REQUEST",
         "BEGIN:VEVENT",
-        f"UID:{int(utc.timestamp())}@beispiel-mail.de",
+        f"UID:{int(utc.timestamp())}@{ME[1].split('@')[1]}",
         f"DTSTAMP:{NOW.astimezone(dt.timezone.utc).strftime(fmt)}",
         f"DTSTART:{utc.strftime(fmt)}",
         f"DTEND:{(utc + dt.timedelta(minutes=minutes)).strftime(fmt)}",
@@ -118,7 +136,7 @@ def vcf(name: str, first: str, last: str, org: str, title: str, mail: str, phone
             f"TITLE:{title}",
             f"EMAIL;TYPE=INTERNET,WORK:{mail}",
             f"TEL;TYPE=WORK,VOICE:{phone}",
-            f"ADR;TYPE=WORK:;;{street};{city};;{zip_code};Deutschland",
+            f"ADR;TYPE=WORK:;;{street};{city};;{zip_code};{'Deutschland' if LANG == 'de' else 'United Kingdom'}",
             "END:VCARD",
             "",
         ]
@@ -131,8 +149,8 @@ def vcf(name: str, first: str, last: str, org: str, title: str, mail: str, phone
 
 def html_body(paragraphs: list[str], signature: str, image_cid: str | None = None, remote_image: bool = False) -> str:
     parts = "".join(f"<p>{p}</p>" for p in paragraphs)
-    image = f'<p><img src="cid:{image_cid}" alt="Foto" width="320"></p>' if image_cid else ""
-    tracker = '<img src="https://tracking.fachmagazin-digital.example/open.gif" width="1" height="1" alt="">' if remote_image else ""
+    image = f'<p><img src="cid:{image_cid}" alt="{"Foto" if LANG == "de" else "Photo"}" width="320"></p>' if image_cid else ""
+    tracker = '<img src="https://tracking.newsletter.example/open.gif" width="1" height="1" alt="">' if remote_image else ""
     return (
         '<html><head><style>body{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1d1d1f}'
         ".sig{color:#6e6e73;font-size:13px;border-top:1px solid #e5e5ea;padding-top:8px;margin-top:16px}</style></head>"
@@ -148,7 +166,7 @@ def message(sender, to, subject, when, paragraphs, labels, attachments=(), cc=()
         msg["Cc"] = ", ".join(email.utils.formataddr(p) for p in cc)
     msg["Subject"] = subject
     msg["Date"] = email.utils.format_datetime(when)
-    msg["Message-ID"] = email.utils.make_msgid(domain="beispiel-mail.de")
+    msg["Message-ID"] = email.utils.make_msgid(domain=ME[1].split("@")[1])
     msg["X-Gmail-Labels"] = ",".join(labels)
     if important:
         msg["X-Priority"] = "1 (Highest)"
@@ -214,6 +232,48 @@ def build() -> list[EmailMessage]:
     return messages
 
 
+def build_en() -> list[EmailMessage]:
+    p = PEOPLE_EN
+    inbox, sent, archive = "Inbox", "Sent", "Archive"
+    read, unread, star = "Opened", "Unread", "Starred"
+    contract = pdf("Framework Agreement Website Relaunch", ["Client: Sample Trading Ltd", "Contractor: Northwind Design Ltd", "Term: 12 months", "Fee: GBP 21,500 plus VAT"])
+    invoice = pdf("Invoice 2026-1043", ["Brooks IT Services", "Maintenance contract Q3", "Amount: GBP 990.00 (incl. 20 % VAT)", "Payable within 14 days"])
+    offer = pdf("Quote Exhibition Stand", ["Foster Exhibits", "Stand area 24 sqm, modular system", "Graphics and lighting", "Total: GBP 16,400 plus VAT"])
+    photo = png(480, 300, (61, 139, 255), (90, 61, 255))
+    booth = png(640, 400, (255, 183, 77), (255, 112, 67))
+    expenses = "Date,Description,Amount\n2026-09-02,Train to Manchester,79.90\n2026-09-03,Hotel,118.00\n2026-09-03,Client dinner,48.40\n".encode()
+    forwarded = message(p["lena"], [p["felix"]], "Budget approved: City Festival", at(20, 9, 12), ["Hi Lucas,", "the budget for the city festival is approved. Please sort out the details with the stand builder."], [inbox])
+
+    messages = [
+        message(p["anna"], [ME], "Homepage draft – feedback by Friday?", at(0, 9, 41), ["Hi Alex,", "here is the revised homepage draft. We simplified the navigation and gave the search a more prominent place.", "Could you send me your feedback by <b>Friday</b>?"], [inbox, "Projects/Website Relaunch", unread], image=photo),
+        message(p["jonas"], [ME], "Invoice 2026-1043 – Maintenance Q3", at(0, 8, 5), ["Good morning Alex,", "please find attached the invoice for the maintenance contract in the third quarter.", "Kind regards"], [inbox, "Invoices", unread], [("Invoice-2026-1043.pdf", invoice, "application/pdf")]),
+        message(p["sara"], [ME], "Contract review completed", at(0, 7, 30), ["Dear Alex,", "the review of the framework agreement is complete. Please note our comments on clause 7 (liability) and clause 12 (termination)."], [inbox, "Projects/Website Relaunch", unread, star], [("Framework-Agreement-Comments.pdf", contract, "application/pdf")], important=True),
+        message(p["tim"], [ME], "Quote: autumn exhibition stand", at(1, 16, 20), ["Hi Alex,", "as discussed, here is our quote for the exhibition stand. We could deliver four weeks before the fair opens."], [inbox, "Projects/Trade Fair 2026", read], [("Quote-Exhibition-Stand.pdf", offer, "application/pdf"), ("Stand-Preview.png", booth, "image/png")]),
+        message(p["julia"], [ME], "Invitation: Website relaunch check-in", at(1, 11, 2), ["Hi Alex,", "I'd like to invite you to a check-in about the next project phase. The invitation is attached as a calendar file."], [inbox, "Projects/Website Relaunch", read], [("Invitation.ics", ics("Website relaunch check-in", at(-2, 10, 0), 60, "Meeting room 2 / video call", p["julia"], [ME, p["anna"]]), "text/calendar")]),
+        message(p["news"], [ME], "This week: AI for small businesses", at(2, 6, 0), ["Dear readers,", "this week: how small and medium-sized businesses put AI to good use, new e-invoicing rules and an interview on IT security."], [inbox, "Newsletters", unread], remote_image=True, signature="Digital Business Weekly · Unsubscribe"),
+        message(ME, [p["anna"]], "Re: Homepage draft – feedback by Friday?", at(3, 14, 15), ["Hi Emma,", "thanks for the draft! I really like the simpler navigation. Could we tone down the footer colours a little?"], [sent, read]),
+        message(p["felix"], [ME], "Travel expenses September", at(3, 10, 48), ["Hi Alex,", "attached are my travel expenses for September. I'll hand in the original receipts later."], [inbox, read], [("Travel-Expenses-September.csv", expenses, "text/csv")]),
+        message(p["lena"], [ME], "Contact details Riverton Utilities", at(4, 9, 30), ["Hello Alex,", "as requested, here are my contact details as a vCard."], [inbox, "Clients", read], [("Olivia-Hughes.vcf", vcf("Olivia Hughes", "Olivia", "Hughes", "Riverton Utilities", "Head of Marketing", p["lena"][1], "+44 20 7946 0142", "12 Harbour Street", "Riverton", "RT1 2AB"), "text/vcard")]),
+        message(p["felix"], [ME], "Fwd: Budget approved: City Festival", at(6, 15, 5), ["Hi Alex,", "FYI, the approval from Olivia – the original message is attached."], [inbox, "Clients", read], [("Budget approved City Festival.eml", forwarded, "message/rfc822")]),
+        message(p["bank"], [ME], "Your statement is ready", at(8, 7, 12), ["Dear customer,", "your electronic statement for last month is now available in online banking."], [inbox, "Invoices", read]),
+        message(p["tim"], [ME], "Re: Quote: autumn exhibition stand", at(9, 13, 40), ["Hi Alex,", "we can also extend the stand to 30 sqm. Happy to send you an alternative."], [inbox, "Projects/Trade Fair 2026", read, star]),
+        message(ME, [p["tim"]], "Exhibition stand: questions about lighting", at(10, 11, 0), ["Hi Ryan,", "how many spotlights are included in the quote, and is the power supply included?"], [sent, read]),
+        message(p["anna"], [ME], "Mood board website relaunch", at(15, 16, 45), ["Hi Alex,", "here is the mood board with the three styles. Our favourite is option B."], [archive, "Projects/Website Relaunch", read], image=photo),
+        message(p["jonas"], [ME], "Maintenance window on Saturday", at(18, 12, 0), ["Hello everyone,", "on Saturday between 8 am and 12 noon we will install updates on the servers. There may be short interruptions."], [archive, read], cc=[p["felix"]]),
+        message(p["sara"], [ME], "Privacy policy – updated version", at(25, 10, 20), ["Dear Alex,", "please find attached the updated privacy policy for the new website."], [archive, "Projects/Website Relaunch", read], [("Privacy-Policy.pdf", pdf("Privacy Policy", ["Controller: Sample Trading Ltd", "Version: current"]), "application/pdf")]),
+        message(p["lena"], [ME], "City festival review", at(34, 17, 30), ["Hello Alex,", "thank you so much for the great collaboration at the city festival! I'll send you the photos separately."], [archive, "Clients", read]),
+        message(p["tim"], [ME], "Photos of the exhibition stand", at(52, 9, 15), ["Hi Alex,", "here are the photos of the build-up. Looks really good!"], [archive, "Projects/Trade Fair 2026", read], [("Stand-Build-Up.png", booth, "image/png")]),
+        message(p["jonas"], [ME], "Invoice 2026-0871", at(70, 8, 0), ["Hello,", "please find attached the invoice for the maintenance contract in the second quarter."], [archive, "Invoices", read], [("Invoice-2026-0871.pdf", pdf("Invoice 2026-0871", ["Brooks IT Services", "Maintenance contract Q2", "Amount: GBP 990.00"]), "application/pdf")]),
+        message(p["anna"], [ME], "Website relaunch kick-off", at(96, 15, 0), ["Hi Alex,", "thanks for the productive kick-off meeting! Attached is the signed framework agreement."], [archive, "Projects/Website Relaunch", read], [("Framework-Agreement.pdf", contract, "application/pdf")]),
+        message(ME, [p["anna"]], "Re: Website relaunch kick-off", at(95, 9, 30), ["Hi Emma,", "thanks, the agreement arrived. Looking forward to working with you!"], [sent, read]),
+        message(p["news"], [ME], "Special issue: e-invoicing in 2027", at(130, 6, 0), ["Dear readers,", "everything you need to know about mandatory e-invoicing at a glance."], ["Newsletters", read], remote_image=True, signature="Digital Business Weekly · Unsubscribe"),
+        message(p["felix"], [ME], "Summer holiday planning", at(160, 11, 11), ["Hi Alex,", "I'd like to take holiday from 1 to 21 August. Does that fit the project plan?"], [archive, read]),
+        message(p["sara"], [ME], "Trademark application filed", at(210, 14, 0), ["Dear Alex,", "the trademark application has been filed. The reference number will follow shortly."], [archive, read, star], important=True),
+        message(p["jonas"], [ME], "New laptop for Lucas", at(260, 10, 0), ["Hi Alex,", "the new laptop for Lucas has arrived and is set up."], [archive, read]),
+    ]
+    return messages
+
+
 def write_mbox(messages: list[EmailMessage], path: Path) -> None:
     with path.open("wb") as out:
         for msg in messages:
@@ -221,17 +281,19 @@ def write_mbox(messages: list[EmailMessage], path: Path) -> None:
             # mboxrd: quote "From " lines in the body.
             lines = [b">" + line if line.lstrip(b">").startswith(b"From ") else line for line in raw.split(b"\n")]
             date = email.utils.parsedate_to_datetime(msg["Date"]).strftime("%a %b %d %H:%M:%S %Y")
-            out.write(b"From demo@beispiel-mail.de " + date.encode() + b"\n" + b"\n".join(lines) + b"\n\n")
+            out.write(b"From demo@" + ME[1].split("@")[1].encode() + b" " + date.encode() + b"\n" + b"\n".join(lines) + b"\n\n")
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    messages = build()
-    write_mbox(messages, OUT / "Demo-Postfach.mbox")
-    folder = OUT / "Demo-Ordner"
-    for sub in ("Kunden", "Projekte"):
+    english = LANG == "en"
+    messages = build_en() if english else build()
+    write_mbox(messages, OUT / ("Demo-Mailbox.mbox" if english else "Demo-Postfach.mbox"))
+    folder = OUT / ("Demo-Folder" if english else "Demo-Ordner")
+    clients, projects = ("Clients", "Projects") if english else ("Kunden", "Projekte")
+    for sub in (clients, projects):
         (folder / sub).mkdir(parents=True, exist_ok=True)
-    picks = {"Kunden": [8, 16], "Projekte": [0, 3], "": [1]}
+    picks = {clients: [8, 16], projects: [0, 3], "": [1]}
     for sub, indices in picks.items():
         for index in indices:
             msg = messages[index]
