@@ -34,7 +34,7 @@ The names carry no version, so `https://github.com/mariokernich/pst-viewer/relea
 
 - **Settings → Actions → General → Workflow permissions:** "Read and write permissions" and **"Allow GitHub Actions to create and approve pull requests"** (release-please needs both).
 - **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-- Pull requests created by release-please with the default `GITHUB_TOKEN` do not start other workflows, so CI does not run on the release pull request itself. That is fine, because it only changes version numbers; use a personal access token as `token` for release-please if you want checks there.
+- **Secret `RELEASE_PLEASE_TOKEN`:** a fine-grained personal access token for this repository with *Contents* and *Pull requests* read/write. With it, the release pull request is opened by you, so its squash commit is authored by you (with the default `GITHUB_TOKEN` it would be `github-actions[bot]`), and CI runs on it. Merge release pull requests with **Squash and merge**.
 
 ## Secrets (Settings → Secrets and variables → Actions)
 
