@@ -81,7 +81,24 @@ jobs:
             export CSC_IDENTITY_AUTO_DISCOVERY=false
             unset CSC_LINK CSC_KEY_PASSWORD
             echo "::warning::No signing certificate configured, building unsigned."
-          elif [ -n "$ASC_KEY" ]; then
+          elif [ "${{ matrix.os }}" = macos-latest ]; then
+            # Import the Developer ID certificate into an own keychain; the one
+            # electron-builder creates from CSC_LINK cannot be unlocked on the
+            # current macOS runners.
+            KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+            KEYCHAIN_PASSWORD=$(openssl rand -hex 24)
+            security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+            security set-keychain-settings -lut 21600 "$KEYCHAIN"
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+            echo "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+            security import "$RUNNER_TEMP/developer-id.p12" -k "$KEYCHAIN" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+            security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+            rm "$RUNNER_TEMP/developer-id.p12"
+            unset CSC_LINK CSC_KEY_PASSWORD
+            export CSC_NAME="Mario Kernich (34JNW2E282)"
+          fi
+          if [ -n "${CSC_NAME:-}" ] && [ -n "$ASC_KEY" ]; then
             export APPLE_API_KEY="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
             echo "$ASC_KEY" | base64 --decode > "$APPLE_API_KEY"
             export APPLE_API_KEY_ID="$ASC_KEY_ID" APPLE_API_ISSUER="$ASC_ISSUER_ID"
