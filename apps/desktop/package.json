@@ -1,7 +1,7 @@
 {
   "name": "@pst-viewer/desktop",
   "productName": "PST Viewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A fast, read-only viewer for Outlook data files (.pst).",
   "author": "Mario Kernich <mario@kernich.de>",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "pst-viewer-monorepo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "PST Viewer – read-only viewer for Outlook PST, MSG, EML and MBOX files: desktop, mobile apps and website.",
   "author": "Mario Kernich <mario@kernich.de>",
