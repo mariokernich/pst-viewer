@@ -1,0 +1,30 @@
+# Keeps Cargo.lock in step with the release pull request: release-please raises
+# the workspace version in Cargo.toml, this adds the matching Cargo.lock change.
+name: Release PR
+
+on:
+  push:
+    branches: [release-please--branches--main--components--pst-viewer]
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - name: Update the workspace crates in Cargo.lock
+        run: |
+          cargo update --workspace
+          if git diff --quiet Cargo.lock; then
+            echo "Cargo.lock is up to date."
+            exit 0
+          fi
+          git config user.name "Mario Kernich"
+          git config user.email "mario@kernich.de"
+          git commit -m "chore: update Cargo.lock" Cargo.lock
+          git push

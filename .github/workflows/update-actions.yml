@@ -1,0 +1,44 @@
+# Updates the pinned GitHub Actions once a week (pinact, versions at least
+# 3 days old) and opens a pull request for review. Replaces Dependabot, whose
+# pull requests would add a bot author to the history.
+name: Update actions
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - name: Install pinact
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/pinact.tar.gz" https://github.com/suzuki-shunsuke/pinact/releases/download/v5.0.0/pinact_linux_amd64.tar.gz
+          echo "d005bbb85da80dacdc07816f24a5da723a9f6d1e9f3d3e7e73df33f9caa1358f  $RUNNER_TEMP/pinact.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/pinact.tar.gz" -C "$RUNNER_TEMP" pinact
+      - name: Update and open a pull request
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          "$RUNNER_TEMP/pinact" run --update --min-age 3
+          if git diff --quiet; then
+            echo "All actions are up to date."
+            exit 0
+          fi
+          branch=chore/update-actions
+          git config user.name "Mario Kernich"
+          git config user.email "mario@kernich.de"
+          git switch -C "$branch"
+          git commit -am "ci: update GitHub Actions"
+          git push --force origin "$branch"
+          if [ -z "$(gh pr list --head "$branch" --json number --jq '.[].number')" ]; then
+            gh pr create --head "$branch" --title "ci: update GitHub Actions" --body "Pinned actions updated by pinact (releases at least 3 days old). Check the release notes of each action before merging; merge with *Squash and merge*."
+          fi
