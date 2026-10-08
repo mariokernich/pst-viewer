@@ -16,8 +16,8 @@
 <br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/desktop-dark-en.png">
-  <img src="docs/screenshots/desktop-light-en.png" alt="PST Viewer on the Mac: folders, message list grouped by date and the reading pane" width="900">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/readme-desktop-dark.png">
+  <img src="docs/screenshots/readme-desktop-light.png" alt="PST Viewer on the Mac: folders, message list grouped by date and the reading pane" width="900">
 </picture>
 
 </div>
