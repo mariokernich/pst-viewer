@@ -158,13 +158,13 @@ export const docsDe: DocsContent = {
           body: (
             <>
               <p>
-                Die Desktop-Versionen auf GitHub sind eventuell noch nicht signiert. An der Funktion von PST Viewer
-                ändert das nichts, aber macOS und Windows können den Herausgeber nicht prüfen und fragen beim ersten
-                Öffnen nach. Das ist nur einmal nötig. Unsicher? Der vollständige{' '}
+                Die Mac-Version ist mit einer Apple-Developer-ID signiert und von Apple notarisiert, sie startet also
+                ohne Nachfrage. Der Windows-Installer ist noch nicht signiert: Windows kann den Herausgeber nicht prüfen
+                und fragt beim ersten Öffnen nach. Das ist nur einmal nötig. Unsicher? Der vollständige{' '}
                 <a href={github.repo}>Quellcode</a> ist öffentlich – Sie können nachsehen, was Sie installieren.
               </p>
-              <h3>macOS (Gatekeeper)</h3>
-              <p>Meldet macOS, dass PST Viewer nicht geöffnet oder nicht überprüft werden kann:</p>
+              <h3>macOS (Gatekeeper, nur ältere Downloads)</h3>
+              <p>Meldet macOS bei einem älteren Download, dass PST Viewer nicht geöffnet oder nicht überprüft werden kann:</p>
               <Steps>
                 <li>
                   <strong>Bis macOS 14:</strong> Klicken Sie im Programme-Ordner bei gedrückter Ctrl-Taste (oder mit
@@ -957,8 +957,8 @@ export const docsDe: DocsContent = {
           title: 'macOS oder Windows öffnet die App nicht',
           body: (
             <p>
-              Die Desktop-Versionen sind eventuell noch nicht signiert, deshalb fragen Gatekeeper (macOS) bzw.
-              SmartScreen (Windows) beim ersten Start nach. Die Schritte stehen unter{' '}
+              Der Windows-Installer ist noch nicht signiert, deshalb fragt SmartScreen beim ersten Start nach (ältere
+              Mac-Downloads waren ebenfalls unsigniert). Die Schritte stehen unter{' '}
               <DocLink locale={locale} id="installation" hash="first-launch">
                 Erster Start: die App bestätigen
               </DocLink>

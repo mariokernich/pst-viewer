@@ -116,9 +116,10 @@ export const stores: Record<StoreId, Store> = {
     id: 'macAppStore',
     platform: 'mac',
     name: 'Mac App Store',
-    // TODO: set to true and add the product URL once the app is listed.
+    // TODO: set to true once Apple has approved the app (in review since 2026-10-08).
     available: false,
-    url: '#',
+    // Same App Store record for iPhone, iPad and Mac.
+    url: 'https://apps.apple.com/app/id6820516765',
   },
   microsoftStore: {
     id: 'microsoftStore',
@@ -132,9 +133,10 @@ export const stores: Record<StoreId, Store> = {
     id: 'appStore',
     platform: 'ios',
     name: 'App Store',
-    // TODO: set to true and add the product URL once the iPhone & iPad app is listed.
+    // TODO: set to true once Apple has approved the app (in review since 2026-10-08).
     available: false,
-    url: '#',
+    // Same App Store record for iPhone, iPad and Mac.
+    url: 'https://apps.apple.com/app/id6820516765',
   },
   googlePlay: {
     id: 'googlePlay',

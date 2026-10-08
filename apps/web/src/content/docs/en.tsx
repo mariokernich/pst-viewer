@@ -153,13 +153,13 @@ export const docsEn: DocsContent = {
           body: (
             <>
               <p>
-                The desktop builds on GitHub may not be code-signed yet. That doesn’t affect how PST Viewer works, but
-                macOS and Windows can’t check the publisher and ask for confirmation the first time you open the app.
-                You only have to do this once. Not sure? The complete <a href={github.repo}>source code</a> is public,
-                so you can check what you install.
+                The Mac version is signed with an Apple Developer ID and notarized by Apple, so it opens right away.
+                The Windows installer is not code-signed yet: Windows can’t check the publisher and asks for
+                confirmation the first time. You only have to do this once. Not sure? The complete{' '}
+                <a href={github.repo}>source code</a> is public, so you can check what you install.
               </p>
-              <h3>macOS (Gatekeeper)</h3>
-              <p>If macOS reports that PST Viewer can’t be opened or verified:</p>
+              <h3>macOS (Gatekeeper, older downloads only)</h3>
+              <p>If macOS reports that an older download of PST Viewer can’t be opened or verified:</p>
               <Steps>
                 <li>
                   <strong>macOS 14 and earlier:</strong> in the Applications folder, Control-click (or right-click)
@@ -931,8 +931,8 @@ export const docsEn: DocsContent = {
           title: 'macOS or Windows won’t open the app',
           body: (
             <p>
-              The desktop builds may not be code-signed yet, so Gatekeeper (macOS) or SmartScreen (Windows) asks for
-              confirmation on the first launch. See{' '}
+              The Windows installer is not code-signed yet, so SmartScreen asks for confirmation on the first launch
+              (older Mac downloads were not signed either). See{' '}
               <DocLink locale={locale} id="installation" hash="first-launch">
                 First launch: confirming the app
               </DocLink>{' '}

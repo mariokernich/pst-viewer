@@ -62,7 +62,7 @@ PST Viewer is free and open source. Downloads for every release are on the [rele
 | iPhone and iPad | App Store (coming soon) or [build it yourself](apps/ios/README.md) |
 
 > [!NOTE]
-> The desktop builds may not be code-signed yet. On macOS, open the app the first time with right-click → **Open**; on Windows, choose **More info → Run anyway** in the SmartScreen dialog.
+> The Mac version is signed and notarized by Apple. The Windows installer is not code-signed yet: choose **More info → Run anyway** in the SmartScreen dialog on the first launch.
 
 Free versions in the Mac App Store, Microsoft Store, App Store and Google Play are in preparation.
 

@@ -267,12 +267,8 @@ export const landingDe: LandingContent = {
     iosSourceLink: 'Anleitung auf GitHub',
     unsignedTitle: 'Hinweis zum ersten Start',
     unsignedText:
-      'Die Desktop-Versionen sind eventuell noch nicht signiert. macOS (Gatekeeper) und Windows (SmartScreen) können beim ersten Start deshalb nachfragen – so öffnen Sie die App trotzdem:',
+      'Die Mac-Version ist von Apple notarisiert und startet direkt. Der Windows-Installer ist noch nicht signiert, deshalb fragt SmartScreen beim ersten Start nach:',
     unsignedSteps: [
-      {
-        platform: 'macOS',
-        text: 'Rechtsklick auf die App → Öffnen. Ab macOS 15: Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“.',
-      },
       { platform: 'Windows', text: 'Im SmartScreen-Fenster „Weitere Informationen“ → „Trotzdem ausführen“.' },
     ],
     unsignedLink: 'Installationsanleitung',
@@ -330,7 +326,7 @@ export const landingDe: LandingContent = {
       {
         question: 'Sind die Mac- und Windows-Versionen signiert?',
         answer:
-          'Eventuell noch nicht. Dann warnt macOS beim ersten Start (Rechtsklick auf die App → Öffnen, oder Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“) bzw. Windows SmartScreen („Weitere Informationen“ → „Trotzdem ausführen“). Die Installationsanleitung in der Dokumentation zeigt die Schritte im Detail.',
+          'Die Mac-Version ist mit einer Apple-Developer-ID signiert und von Apple notarisiert, sie startet ohne Warnung. Der Windows-Installer ist noch nicht signiert; Windows SmartScreen fragt deshalb beim ersten Start nach („Weitere Informationen“ → „Trotzdem ausführen“). Die Installationsanleitung in der Dokumentation zeigt die Schritte im Detail.',
       },
       {
         question: 'In welchen Sprachen gibt es PST Viewer?',

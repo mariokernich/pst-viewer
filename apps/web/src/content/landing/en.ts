@@ -267,12 +267,8 @@ export const landingEn: LandingContent = {
     iosSourceLink: 'Instructions on GitHub',
     unsignedTitle: 'A note on the first launch',
     unsignedText:
-      'The desktop builds may not be code-signed yet, so macOS (Gatekeeper) and Windows (SmartScreen) may ask for confirmation on the first launch. Here’s how to open the app anyway:',
+      'The Mac version is notarized by Apple and opens right away. The Windows installer is not code-signed yet, so SmartScreen asks for confirmation on the first launch:',
     unsignedSteps: [
-      {
-        platform: 'macOS',
-        text: 'Right-click the app → Open. On macOS 15 and later: System Settings → Privacy & Security → “Open Anyway”.',
-      },
       { platform: 'Windows', text: 'In the SmartScreen dialog, choose “More info” → “Run anyway”.' },
     ],
     unsignedLink: 'Installation guide',
@@ -330,7 +326,7 @@ export const landingEn: LandingContent = {
       {
         question: 'Are the Mac and Windows builds signed?',
         answer:
-          'Possibly not yet. In that case macOS warns on the first launch (right-click the app → Open, or System Settings → Privacy & Security → “Open Anyway”), and so does Windows SmartScreen (“More info” → “Run anyway”). The installation guide in the documentation walks you through it.',
+          'The Mac version is signed with an Apple Developer ID and notarized by Apple, so it opens without a warning. The Windows installer is not code-signed yet, so Windows SmartScreen asks on the first launch (“More info” → “Run anyway”). The installation guide in the documentation walks you through it.',
       },
       {
         question: 'Which languages does PST Viewer support?',
