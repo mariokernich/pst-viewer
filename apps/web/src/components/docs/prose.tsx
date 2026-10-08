@@ -1,10 +1,12 @@
 import { Info, Lightbulb, TriangleAlert } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import { AppLink } from '@/components/ui/app-link'
+import { common } from '@/content/common'
 import { keyboardShortcuts, searchSyntax } from '@/content/reference'
 import { cn } from '@/lib/cn'
 import type { Locale } from '@/lib/i18n'
 import { pathFor, type DocId, type LegalId } from '@/lib/routes'
+import { downloadGroups, downloads } from '@/lib/site'
 
 /**
  * Building blocks for the documentation content. Plain elements (p, ul, ol,
@@ -65,9 +67,64 @@ export function LegalLink({ locale, id, children }: { locale: Locale; id: LegalI
 }
 
 const tableLabels = {
-  de: { example: 'Beispiel', other: 'Englische Variante', meaning: 'Bedeutung', action: 'Aktion', or: 'oder' },
-  en: { example: 'Example', other: 'German equivalent', meaning: 'Meaning', action: 'Action', or: 'or' },
+  de: {
+    example: 'Beispiel',
+    other: 'Englische Variante',
+    meaning: 'Bedeutung',
+    action: 'Aktion',
+    or: 'oder',
+    system: 'System',
+    version: 'Version',
+    file: 'Datei',
+  },
+  en: {
+    example: 'Example',
+    other: 'German equivalent',
+    meaning: 'Meaning',
+    action: 'Action',
+    or: 'or',
+    system: 'System',
+    version: 'Version',
+    file: 'File',
+  },
 } as const
+
+/** Every download of the latest GitHub release with a direct link. */
+export function DownloadTable({ locale }: { locale: Locale }) {
+  const labels = tableLabels[locale]
+  const t = common[locale].download
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{labels.system}</th>
+            <th scope="col">{labels.version}</th>
+            <th scope="col">{labels.file}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {downloadGroups.flatMap((group) =>
+            group.ids.map((id) => (
+              <tr key={id}>
+                <td>{t.platformNames[group.platform]}</td>
+                <td>
+                  {t.items[id].label}
+                  <span className="block text-sm text-muted">{t.items[id].detail}</span>
+                </td>
+                <td>
+                  <a href={downloads[id].url} className="break-all">
+                    {downloads[id].file}
+                  </a>
+                </td>
+              </tr>
+            )),
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 /** Full search syntax table: examples in the page language plus the other language. */
 export function SyntaxTable({ locale }: { locale: Locale }) {
@@ -116,7 +173,7 @@ function KeyAlternatives({ alternatives, or }: { alternatives: string[][]; or: s
   )
 }
 
-/** Keyboard shortcuts of the desktop app for Mac and Windows. */
+/** Keyboard shortcuts of the desktop app for Mac and Windows/Linux. */
 export function ShortcutTable({ locale }: { locale: Locale }) {
   const labels = tableLabels[locale]
   return (
@@ -126,7 +183,7 @@ export function ShortcutTable({ locale }: { locale: Locale }) {
           <tr>
             <th scope="col">{labels.action}</th>
             <th scope="col">Mac</th>
-            <th scope="col">Windows</th>
+            <th scope="col">Windows / Linux</th>
           </tr>
         </thead>
         <tbody>

@@ -1,5 +1,5 @@
 import type { Locale } from '@/lib/i18n'
-import type { StoreId } from '@/lib/site'
+import type { DownloadId, DownloadPlatform, StoreId } from '@/lib/site'
 
 export interface CommonContent {
   meta: {
@@ -11,13 +11,18 @@ export interface CommonContent {
     label: string
     features: string
     platforms: string
-    pricing: string
+    openSource: string
+    download: string
     docs: string
     faq: string
   }
   header: {
     home: string
     cta: string
+    /** Visible text of the GitHub link. */
+    github: string
+    /** Accessible name / tooltip of the GitHub link. */
+    githubLabel: string
     openMenu: string
     closeMenu: string
   }
@@ -32,17 +37,25 @@ export interface CommonContent {
     light: string
     dark: string
   }
-  price: {
-    /** Formatted price, e.g. "4,99 €". */
-    amount: string
-    oneTime: string
-    perStore: string
-  }
   store: {
     /** Small line above the store name, e.g. "Laden im". */
     prefix: Record<StoreId, string>
-    inDevelopment: string
+    comingSoon: string
   }
+  download: {
+    /** Generic call to action (server-rendered default, links to the downloads section). */
+    cta: string
+    /** Call to action once the visitor's platform is known. */
+    ctaFor: Record<DownloadPlatform, string>
+    platformNames: Record<DownloadPlatform | 'ios', string>
+    items: Record<DownloadId, { label: string; detail: string }>
+    /** Line below the hero buttons, e.g. "Apple Silicon · .dmg". */
+    otherVersions: string
+    recommended: string
+    /** Accessible suffix for links to github.com. */
+    external: string
+  }
+  openSourceBadge: string
   screenshot: {
     placeholder: string
   }
@@ -51,6 +64,11 @@ export interface CommonContent {
     product: string
     documentation: string
     legal: string
+    openSource: string
+    sourceCode: string
+    releases: string
+    issues: string
+    license: string
     legalNotice: string
     privacy: string
     language: string
@@ -66,26 +84,35 @@ export interface CommonContent {
     home: string
     docs: string
   }
+  /** Language chooser of the root page (`/`), shown while redirecting or without JavaScript. */
+  root: {
+    title: string
+    text: string
+    action: string
+  }
 }
 
 const de: CommonContent = {
   meta: {
     defaultTitle: 'PST Viewer – Outlook-Archive öffnen, ohne Outlook',
     description:
-      'PST Viewer öffnet PST-, MSG-, EML- und MBOX-Dateien schnell, streng schreibgeschützt und komplett lokal. Für Mac und Windows, einmalig 4,99 € – ohne Abo.',
+      'PST Viewer öffnet PST-, MSG-, EML- und MBOX-Dateien schnell, streng schreibgeschützt und komplett lokal. Kostenlos und Open Source (MIT) – für Mac, Windows, Linux und Android.',
   },
   skipToContent: 'Zum Inhalt springen',
   nav: {
     label: 'Hauptnavigation',
     features: 'Funktionen',
     platforms: 'Plattformen',
-    pricing: 'Preis',
+    openSource: 'Open Source',
+    download: 'Download',
     docs: 'Doku',
     faq: 'FAQ',
   },
   header: {
     home: 'PST Viewer – zur Startseite',
-    cta: 'Für 4,99 € kaufen',
+    cta: 'Download',
+    github: 'GitHub',
+    githubLabel: 'Quellcode von PST Viewer auf GitHub',
     openMenu: 'Menü öffnen',
     closeMenu: 'Menü schließen',
   },
@@ -99,11 +126,6 @@ const de: CommonContent = {
     light: 'Hell',
     dark: 'Dunkel',
   },
-  price: {
-    amount: '4,99 €',
-    oneTime: 'einmalig',
-    perStore: 'pro Store',
-  },
   store: {
     prefix: {
       macAppStore: 'Laden im',
@@ -111,8 +133,31 @@ const de: CommonContent = {
       appStore: 'Laden im',
       googlePlay: 'Jetzt bei',
     },
-    inDevelopment: 'In Entwicklung',
+    comingSoon: 'Demnächst – kostenlos',
   },
+  download: {
+    cta: 'Kostenlos herunterladen',
+    ctaFor: {
+      mac: 'Für macOS herunterladen',
+      windows: 'Für Windows herunterladen',
+      linux: 'Für Linux herunterladen',
+      android: 'Für Android herunterladen',
+    },
+    platformNames: { mac: 'macOS', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone & iPad' },
+    items: {
+      macArm64: { label: 'Apple Silicon', detail: 'M1 oder neuer · .dmg' },
+      macX64: { label: 'Intel', detail: 'Ältere Macs mit Intel-Prozessor · .dmg' },
+      windowsX64: { label: 'x64', detail: 'Die meisten Windows-PCs · Installer (.exe)' },
+      windowsArm64: { label: 'ARM64', detail: 'z. B. Snapdragon-Notebooks · Installer (.exe)' },
+      linuxAppImage: { label: 'AppImage', detail: 'Für die meisten Distributionen · x86_64' },
+      linuxDeb: { label: 'Debian / Ubuntu', detail: 'Paket (.deb) · amd64' },
+      android: { label: 'APK', detail: 'Smartphones und Tablets · Android-Paket' },
+    },
+    otherVersions: 'Andere Plattformen & Versionen',
+    recommended: 'Empfohlen für Ihr Gerät',
+    external: '(GitHub)',
+  },
+  openSourceBadge: 'Kostenlos & Open Source · MIT-Lizenz',
   screenshot: {
     placeholder: 'Screenshot folgt',
   },
@@ -121,14 +166,19 @@ const de: CommonContent = {
     product: 'Produkt',
     documentation: 'Dokumentation',
     legal: 'Rechtliches',
+    openSource: 'Open Source',
+    sourceCode: 'Quellcode',
+    releases: 'Releases & Changelog',
+    issues: 'Fehler melden & Ideen',
+    license: 'MIT-Lizenz',
     legalNotice: 'Impressum',
     privacy: 'Datenschutz',
     language: 'Sprache',
     appearance: 'Darstellung',
     copyright: (year) => `© ${year} Mario Kernich`,
-    madeWith: 'Diese Website setzt keine Cookies und verwendet kein Tracking.',
+    madeWith: 'Kostenlos und Open Source unter der MIT-Lizenz. Diese Website setzt keine Cookies und verwendet kein Tracking.',
     trademarks:
-      'Microsoft, Outlook, Windows und Microsoft Store sind Marken der Microsoft-Unternehmensgruppe. Apple, Mac, iPhone, iPad, Apple Mail und App Store sind Marken von Apple Inc. Google Play, Gmail und Android sind Marken von Google LLC. Thunderbird ist eine Marke der Mozilla Foundation. PST Viewer ist ein unabhängiges Produkt und steht in keiner Verbindung zu diesen Unternehmen.',
+      'Microsoft, Outlook, Windows und Microsoft Store sind Marken der Microsoft-Unternehmensgruppe. Apple, Mac, iPhone, iPad, Apple Mail und App Store sind Marken von Apple Inc. Google Play, Gmail und Android sind Marken von Google LLC. Thunderbird ist eine Marke der Mozilla Foundation. GitHub ist eine Marke von GitHub, Inc. Linux ist eine eingetragene Marke von Linus Torvalds. PST Viewer ist ein unabhängiges Projekt und steht in keiner Verbindung zu diesen Unternehmen.',
   },
   notFound: {
     eyebrow: 'Fehler 404',
@@ -137,26 +187,34 @@ const de: CommonContent = {
     home: 'Zur Startseite',
     docs: 'Zur Dokumentation',
   },
+  root: {
+    title: 'PST Viewer auf Deutsch',
+    text: 'Outlook-Archive öffnen – ohne Outlook. Kostenlos und Open Source.',
+    action: 'Weiter auf Deutsch',
+  },
 }
 
 const en: CommonContent = {
   meta: {
     defaultTitle: 'PST Viewer – Open Outlook archives without Outlook',
     description:
-      'PST Viewer opens PST, MSG, EML and MBOX files quickly, strictly read-only and entirely on your device. For Mac and Windows, a one-time €4.99 – no subscription.',
+      'PST Viewer opens PST, MSG, EML and MBOX files quickly, strictly read-only and entirely on your device. Free and open source (MIT) – for Mac, Windows, Linux and Android.',
   },
   skipToContent: 'Skip to content',
   nav: {
     label: 'Main navigation',
     features: 'Features',
     platforms: 'Platforms',
-    pricing: 'Pricing',
+    openSource: 'Open Source',
+    download: 'Download',
     docs: 'Docs',
     faq: 'FAQ',
   },
   header: {
     home: 'PST Viewer – home',
-    cta: 'Buy for €4.99',
+    cta: 'Download',
+    github: 'GitHub',
+    githubLabel: 'PST Viewer source code on GitHub',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
   },
@@ -170,11 +228,6 @@ const en: CommonContent = {
     light: 'Light',
     dark: 'Dark',
   },
-  price: {
-    amount: '€4.99',
-    oneTime: 'one-time',
-    perStore: 'per store',
-  },
   store: {
     prefix: {
       macAppStore: 'Download on the',
@@ -182,8 +235,31 @@ const en: CommonContent = {
       appStore: 'Download on the',
       googlePlay: 'Get it on',
     },
-    inDevelopment: 'In development',
+    comingSoon: 'Coming soon – free',
   },
+  download: {
+    cta: 'Download for free',
+    ctaFor: {
+      mac: 'Download for macOS',
+      windows: 'Download for Windows',
+      linux: 'Download for Linux',
+      android: 'Download for Android',
+    },
+    platformNames: { mac: 'macOS', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone & iPad' },
+    items: {
+      macArm64: { label: 'Apple Silicon', detail: 'M1 or newer · .dmg' },
+      macX64: { label: 'Intel', detail: 'Older Macs with an Intel processor · .dmg' },
+      windowsX64: { label: 'x64', detail: 'Most Windows PCs · installer (.exe)' },
+      windowsArm64: { label: 'ARM64', detail: 'e.g. Snapdragon laptops · installer (.exe)' },
+      linuxAppImage: { label: 'AppImage', detail: 'Works on most distributions · x86_64' },
+      linuxDeb: { label: 'Debian / Ubuntu', detail: 'Package (.deb) · amd64' },
+      android: { label: 'APK', detail: 'Phones and tablets · Android package' },
+    },
+    otherVersions: 'Other platforms & versions',
+    recommended: 'Recommended for your device',
+    external: '(GitHub)',
+  },
+  openSourceBadge: 'Free & open source · MIT license',
   screenshot: {
     placeholder: 'Screenshot coming soon',
   },
@@ -192,14 +268,19 @@ const en: CommonContent = {
     product: 'Product',
     documentation: 'Documentation',
     legal: 'Legal',
+    openSource: 'Open source',
+    sourceCode: 'Source code',
+    releases: 'Releases & changelog',
+    issues: 'Issues & ideas',
+    license: 'MIT license',
     legalNotice: 'Legal notice',
     privacy: 'Privacy',
     language: 'Language',
     appearance: 'Appearance',
     copyright: (year) => `© ${year} Mario Kernich`,
-    madeWith: 'This website sets no cookies and uses no tracking.',
+    madeWith: 'Free and open source under the MIT license. This website sets no cookies and uses no tracking.',
     trademarks:
-      'Microsoft, Outlook, Windows and Microsoft Store are trademarks of the Microsoft group of companies. Apple, Mac, iPhone, iPad, Apple Mail and App Store are trademarks of Apple Inc. Google Play, Gmail and Android are trademarks of Google LLC. Thunderbird is a trademark of the Mozilla Foundation. PST Viewer is an independent product and is not affiliated with these companies.',
+      'Microsoft, Outlook, Windows and Microsoft Store are trademarks of the Microsoft group of companies. Apple, Mac, iPhone, iPad, Apple Mail and App Store are trademarks of Apple Inc. Google Play, Gmail and Android are trademarks of Google LLC. Thunderbird is a trademark of the Mozilla Foundation. GitHub is a trademark of GitHub, Inc. Linux is a registered trademark of Linus Torvalds. PST Viewer is an independent project and is not affiliated with these companies.',
   },
   notFound: {
     eyebrow: 'Error 404',
@@ -207,6 +288,11 @@ const en: CommonContent = {
     text: 'The address may have changed, or there might be a typo in the URL.',
     home: 'Back to home',
     docs: 'Documentation',
+  },
+  root: {
+    title: 'PST Viewer in English',
+    text: 'Open Outlook archives – no Outlook required. Free and open source.',
+    action: 'Continue in English',
   },
 }
 

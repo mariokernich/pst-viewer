@@ -2,25 +2,34 @@ import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AppIcon } from '@/components/brand/app-icon'
+import { LocaleFallbackRedirect } from '@/components/locale-fallback-redirect'
 import { NotFoundContent } from '@/components/not-found-content'
 import { ThemeProvider } from '@/components/theme/theme-provider'
-import { defaultLocale, locales } from '@/lib/i18n'
+import { defaultLocale, locales, type Locale } from '@/lib/i18n'
 import { pathFor } from '@/lib/routes'
+import { siteIcons } from '@/lib/metadata'
 import { siteConfig } from '@/lib/site'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: `Seite nicht gefunden · Page not found – ${siteConfig.name}`,
+  title: `Page not found · Seite nicht gefunden – ${siteConfig.name}`,
+  robots: { index: false },
+  icons: siteIcons,
 }
 
+/** Default locale first, then the others. */
+const ordered: Locale[] = [defaultLocale, ...locales.filter((locale) => locale !== defaultLocale)]
+
 /**
- * Bilingual 404 page for every unmatched URL. It renders its own document
- * because the regular <html> lives in the locale layout.
+ * Bilingual 404 page for every unmatched URL (exported as `404.html`, which
+ * GitHub Pages serves for unknown paths). It renders its own document because
+ * the regular <html> lives in the locale layout.
  */
 export default function NotFound() {
   return (
     <html lang={defaultLocale} className={GeistSans.variable} suppressHydrationWarning>
       <body className="min-h-dvh bg-background text-foreground antialiased">
+        <LocaleFallbackRedirect />
         <ThemeProvider>
           <div className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-16">
             <div
@@ -32,7 +41,7 @@ export default function NotFound() {
               <span className="text-lg font-semibold tracking-tight">PST Viewer</span>
             </Link>
             <main className="grid w-full max-w-4xl gap-12 md:grid-cols-2 md:gap-8">
-              {locales.map((locale, index) => (
+              {ordered.map((locale, index) => (
                 <NotFoundContent key={locale} locale={locale} headingLevel={index === 0 ? 1 : 2} />
               ))}
             </main>

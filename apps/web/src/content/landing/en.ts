@@ -4,20 +4,19 @@ export const landingEn: LandingContent = {
   meta: {
     title: 'PST Viewer – Open PST, MSG, EML and MBOX files without Outlook',
     description:
-      'Open and search Outlook archives without Outlook. PST Viewer reads PST, MSG, EML and MBOX strictly read-only and entirely on your device. One-time €4.99, no subscription.',
+      'Open and search Outlook archives without Outlook. PST Viewer reads PST, MSG, EML and MBOX strictly read-only and entirely on your device. Free and open source.',
   },
   hero: {
-    eyebrow: 'For Mac and Windows · iPhone, iPad and Android in development',
     titleLead: 'Open Outlook archives.',
     titleAccent: 'No Outlook required.',
     subtitle:
       'PST Viewer opens PST, MSG, EML and MBOX files in seconds, finds any message with full-text search and previews attachments right in the app – strictly read-only and entirely on your device.',
-    primaryCta: 'Buy for €4.99',
-    secondaryCta: 'Read the docs',
+    secondaryCta: 'Source code on GitHub',
+    availability: 'For Mac, Windows, Linux and Android · iPhone & iPad coming soon',
     trust: [
       'Read-only – your files stay untouched',
       '100% local – no upload',
-      'One-time €4.99 per store',
+      'Open source under the MIT license',
       'No subscription, no account, no ads',
     ],
   },
@@ -180,14 +179,25 @@ export const landingEn: LandingContent = {
     eyebrow: 'Platforms',
     title: 'One viewer for all your devices.',
     subtitle:
-      'PST Viewer is available for Mac and Windows. Apps for iPhone, iPad and Android with the same features are in development.',
-    badgeDesktop: 'Desktop app',
-    badgeInDevelopment: 'In development',
+      'The desktop app runs on Mac, Windows and Linux, the Android app comes as an APK – all free from GitHub. The iPhone and iPad app is coming to the App Store.',
+    badgeAvailable: 'Download now',
+    badgeAndroid: 'APK available',
+    badgeComingSoon: 'Coming soon',
+    downloadsLink: 'Go to downloads',
     items: {
-      mac: { title: 'Mac', text: 'The desktop app for macOS – via the Mac App Store.' },
-      windows: { title: 'Windows', text: 'The desktop app for Windows – via the Microsoft Store.' },
-      ios: { title: 'iPhone & iPad', text: 'With the same features – via the App Store.' },
-      android: { title: 'Android', text: 'With the same features – via Google Play.' },
+      desktop: {
+        title: 'Mac, Windows & Linux',
+        text: 'The desktop app for macOS (Apple Silicon and Intel), Windows (x64 and ARM64) and Linux (AppImage and .deb) – straight from GitHub. The Mac App Store and Microsoft Store will follow as an additional, equally free option.',
+      },
+      ios: {
+        title: 'iPhone & iPad',
+        text: 'With the same features – coming to the App Store for free. Until then, you can build the app from source with Xcode.',
+        sourceLink: 'Build from source',
+      },
+      android: {
+        title: 'Android',
+        text: 'The same features for phones and tablets – available now as an APK from GitHub, later on Google Play as well.',
+      },
     },
   },
   useCases: {
@@ -214,25 +224,60 @@ export const landingEn: LandingContent = {
       },
     ],
   },
-  pricing: {
-    eyebrow: 'Pricing',
-    title: 'Buy once. No subscription.',
-    subtitle: 'One clear price, no small print – and no recurring costs.',
-    planName: 'PST Viewer',
-    planText: 'Every feature, paid for once.',
-    includedTitle: 'Included',
-    included: [
-      'Open PST, MSG, EML and MBOX',
-      'Full-text search with filters and query syntax',
-      'Attachment previews',
-      'Export as PDF, EML and text, printing',
-      'Calendar items, contacts and tasks',
-      'Light & dark, English & German',
+  openSource: {
+    eyebrow: 'Open source',
+    title: 'Free. Open source. Verifiable.',
+    subtitle:
+      'PST Viewer is MIT-licensed and developed in public on GitHub. For a tool that handles your private email, you shouldn’t have to take our word for it – you can check.',
+    cardTitle: 'PST Viewer',
+    cardText: 'Every feature, for everyone.',
+    free: 'Free',
+    freeNote: 'MIT license',
+    excluded: ['No subscription', 'No account', 'No ads', 'No tracking'],
+    pointsTitle: 'Why open source?',
+    points: [
+      {
+        title: 'Transparent code',
+        text: 'Every line is public. You can verify in the source that the app works locally and uploads nothing.',
+      },
+      {
+        title: 'Read-only by design',
+        text: 'Archives are opened strictly read-only – not a promise in the small print, but built into the code.',
+      },
+      {
+        title: 'Free to use',
+        text: 'The MIT license allows personal and commercial use, modification and redistribution.',
+      },
+      {
+        title: 'Better together',
+        text: 'Found a bug or have an idea? Issues and pull requests on GitHub are welcome.',
+      },
     ],
-    excluded: ['No subscription', 'No account', 'No ads', 'No in-app purchases'],
-    storesTitle: 'Stores & availability',
-    footnote:
-      'The price is a one-time purchase per store (Mac App Store, Microsoft Store, App Store, Google Play). The price shown in the respective store applies.',
+    repoCta: 'Source code on GitHub',
+    issuesCta: 'Report a bug or share an idea',
+    licenseLink: 'Read the MIT license',
+  },
+  download: {
+    eyebrow: 'Download',
+    title: 'Download for free.',
+    subtitle:
+      'Every version comes straight from GitHub Releases – no account, no detours. Pick the right file for your device.',
+    allReleases: 'All releases & changelog',
+    iosText: 'Coming to the App Store for free. Until then, you can build the app from source with Xcode.',
+    iosSourceLink: 'Instructions on GitHub',
+    unsignedTitle: 'A note on the first launch',
+    unsignedText:
+      'The desktop builds may not be code-signed yet, so macOS (Gatekeeper) and Windows (SmartScreen) may ask for confirmation on the first launch. Here’s how to open the app anyway:',
+    unsignedSteps: [
+      {
+        platform: 'macOS',
+        text: 'Right-click the app → Open. On macOS 15 and later: System Settings → Privacy & Security → “Open Anyway”.',
+      },
+      { platform: 'Windows', text: 'In the SmartScreen dialog, choose “More info” → “Run anyway”.' },
+    ],
+    unsignedLink: 'Installation guide',
+    storesTitle: 'Coming to the stores',
+    storesText: 'In addition to GitHub, PST Viewer is coming to the app stores – free there, too.',
   },
   faq: {
     eyebrow: 'FAQ',
@@ -273,8 +318,19 @@ export const landingEn: LandingContent = {
           'No. Encrypted S/MIME messages cannot be decrypted because the private key is not part of the file. Digitally signed messages, on the other hand, are displayed.',
       },
       {
-        question: 'Is PST Viewer a subscription?',
-        answer: 'No. You pay a one-time €4.99 per store – no subscription, no account, no ads and no in-app purchases.',
+        question: 'Is PST Viewer really free?',
+        answer:
+          'Yes. PST Viewer is open source under the MIT license and costs nothing – no subscription, no account, no ads and no in-app purchases. It will be free in the app stores, too.',
+      },
+      {
+        question: 'Why open source?',
+        answer:
+          'Because PST Viewer handles private email. Open source code makes it verifiable that the app works locally, uploads nothing and never modifies your files. And anyone can report bugs and contribute improvements.',
+      },
+      {
+        question: 'Are the Mac and Windows builds signed?',
+        answer:
+          'Possibly not yet. In that case macOS warns on the first launch (right-click the app → Open, or System Settings → Privacy & Security → “Open Anyway”), and so does Windows SmartScreen (“More info” → “Run anyway”). The installation guide in the documentation walks you through it.',
       },
       {
         question: 'Which languages does PST Viewer support?',
@@ -284,15 +340,14 @@ export const landingEn: LandingContent = {
       {
         question: 'Is PST Viewer available for iPhone, iPad and Android?',
         answer:
-          'The apps for iPhone, iPad and Android are in development and will offer the same features as the desktop app.',
+          'The Android app is available now as an APK on GitHub, with Google Play to follow. The iPhone and iPad app is coming to the App Store for free; until then, you can build it from source with Xcode. Both offer the same features as the desktop app.',
       },
     ],
     more: 'You’ll find more answers in the documentation.',
   },
   finalCta: {
     title: 'Your mail archive is waiting.',
-    text: 'PST Viewer for a one-time €4.99 – no subscription, no account. Your data stays on your device.',
-    primaryCta: 'Buy for €4.99',
+    text: 'PST Viewer is free and open source – no subscription, no account. Your data stays on your device.',
     secondaryCta: 'Read the docs',
   },
 }

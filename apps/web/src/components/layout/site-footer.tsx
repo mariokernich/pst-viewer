@@ -5,9 +5,10 @@ import { common } from '@/content/common'
 import { docs } from '@/content/docs'
 import type { Locale } from '@/lib/i18n'
 import { pathFor, sectionPath, type DocId } from '@/lib/routes'
+import { github } from '@/lib/site'
 import { LanguageList } from './language-switcher'
 
-const footerDocs: DocId[] = ['getting-started', 'search', 'attachments', 'export', 'privacy', 'troubleshooting']
+const footerDocs: DocId[] = ['installation', 'getting-started', 'search', 'export', 'privacy', 'troubleshooting']
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   const t = common[locale]
@@ -20,8 +21,17 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       links: [
         { href: sectionPath(locale, 'features'), label: t.nav.features },
         { href: sectionPath(locale, 'platforms'), label: t.nav.platforms },
-        { href: sectionPath(locale, 'pricing'), label: t.nav.pricing },
+        { href: sectionPath(locale, 'download'), label: t.nav.download },
         { href: sectionPath(locale, 'faq'), label: t.nav.faq },
+      ],
+    },
+    {
+      title: t.footer.openSource,
+      links: [
+        { href: github.repo, label: t.footer.sourceCode },
+        { href: github.releases, label: t.footer.releases },
+        { href: github.issues, label: t.footer.issues },
+        { href: github.license, label: t.footer.license },
       ],
     },
     {
@@ -43,8 +53,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className="border-t border-line bg-background-subtle">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-          <div className="max-w-xs">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
+          <div className="max-w-xs sm:col-span-2 md:col-span-3 lg:col-span-1">
             <AppLink href={pathFor(locale, { page: 'home' })} className="inline-flex items-center gap-2.5 rounded-lg">
               <AppIcon size={30} />
               <span className="text-[17px] font-semibold tracking-tight">PST Viewer</span>

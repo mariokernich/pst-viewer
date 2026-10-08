@@ -14,7 +14,7 @@ const platformIcons: Record<PlatformId, LucideIcon> = {
 
 /**
  * Neutral store button (no official badge artwork). Stores that are not
- * available yet render as a non-interactive "in development" button.
+ * available yet render as a non-interactive "coming soon" button.
  * Store URLs and availability are configured in `lib/site.ts`.
  */
 export function StoreButton({ storeId, locale, className }: { storeId: StoreId; locale: Locale; className?: string }) {
@@ -27,7 +27,7 @@ export function StoreButton({ storeId, locale, className }: { storeId: StoreId; 
       <Icon className="size-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
       <span className="flex min-w-0 flex-col items-start text-left leading-tight">
         <span className="text-[11px] font-medium opacity-75">
-          {store.available ? t.prefix[storeId] : t.inDevelopment}
+          {store.available ? t.prefix[storeId] : t.comingSoon}
         </span>
         <span className="text-[15px] font-semibold tracking-tight">{store.name}</span>
       </span>

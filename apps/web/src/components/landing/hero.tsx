@@ -1,17 +1,22 @@
-import { ArrowRight, BadgeEuro, CircleCheck, HardDrive, ShieldCheck, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CircleCheck, Code, HardDrive, ShieldCheck, type LucideIcon } from 'lucide-react'
+import { GitHubIcon } from '@/components/brand/github-icon'
+import { DownloadCta } from '@/components/download/download-cta'
 import { WindowFrame } from '@/components/screenshots/device-frames'
-import { Screenshot } from '@/components/screenshots/screenshot'
-import { ButtonLink } from '@/components/ui/button-link'
+import { ThemedDesktopScreenshot } from '@/components/screenshots/screenshot'
+import { AppLink } from '@/components/ui/app-link'
+import { ButtonLink, buttonClassName } from '@/components/ui/button-link'
 import { common } from '@/content/common'
 import { landing } from '@/content/landing'
 import type { Locale } from '@/lib/i18n'
-import { pathFor, sectionPath } from '@/lib/routes'
+import { sectionPath } from '@/lib/routes'
+import { github } from '@/lib/site'
 
-const trustIcons: [LucideIcon, LucideIcon, LucideIcon, LucideIcon] = [ShieldCheck, HardDrive, BadgeEuro, CircleCheck]
+const trustIcons: [LucideIcon, LucideIcon, LucideIcon, LucideIcon] = [ShieldCheck, HardDrive, Code, CircleCheck]
 
 export function Hero({ locale }: { locale: Locale }) {
   const t = landing[locale].hero
-  const placeholder = common[locale].screenshot.placeholder
+  const c = common[locale]
+  const placeholder = c.screenshot.placeholder
 
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-hidden">
@@ -23,10 +28,14 @@ export function Hero({ locale }: { locale: Locale }) {
 
       <div className="mx-auto max-w-7xl px-4 pt-14 pb-20 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24 lg:pb-28">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-line bg-card/70 px-3.5 py-1.5 text-left text-[13px] font-medium text-muted shadow-soft backdrop-blur sm:rounded-full sm:text-sm">
-            <span aria-hidden="true" className="bg-brand size-1.5 shrink-0 rounded-full" />
-            <span>{t.eyebrow}</span>
-          </p>
+          <a
+            href={github.repo}
+            className="group inline-flex max-w-full items-center gap-2 rounded-2xl border border-line bg-card/70 px-3.5 py-1.5 text-left text-[13px] font-medium text-muted shadow-soft backdrop-blur transition-colors hover:border-accent/40 hover:text-foreground sm:rounded-full sm:text-sm"
+          >
+            <GitHubIcon className="size-4 shrink-0 text-foreground" />
+            <span>{c.openSourceBadge}</span>
+            <ArrowRight className="size-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </a>
           <h1
             id="hero-title"
             className="mt-6 text-[2.75rem] leading-[1.04] font-semibold tracking-[-0.04em] text-balance text-foreground sm:text-6xl lg:text-7xl xl:text-[5.25rem]"
@@ -38,14 +47,22 @@ export function Hero({ locale }: { locale: Locale }) {
             {t.subtitle}
           </p>
           <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <ButtonLink href={sectionPath(locale, 'pricing')} size="lg">
-              {t.primaryCta}
-            </ButtonLink>
-            <ButtonLink href={pathFor(locale, { page: 'docs' })} size="lg" variant="secondary">
+            <DownloadCta
+              labels={c.download}
+              fallbackHref={sectionPath(locale, 'download')}
+              className={buttonClassName('primary', 'lg')}
+            />
+            <ButtonLink href={github.repo} size="lg" variant="secondary">
+              <GitHubIcon className="size-4" />
               {t.secondaryCta}
-              <ArrowRight className="size-4" aria-hidden="true" />
             </ButtonLink>
           </div>
+          <p className="mt-4 text-sm text-pretty text-muted">
+            {t.availability} ·{' '}
+            <AppLink href={sectionPath(locale, 'download')} className="font-medium text-accent hover:underline">
+              {c.download.otherVersions}
+            </AppLink>
+          </p>
         </div>
         <ul className="mx-auto mt-10 grid w-fit gap-x-10 gap-y-3 text-sm text-muted sm:grid-cols-2 xl:flex xl:gap-x-8">
           {t.trust.map((item, index) => {
@@ -65,12 +82,11 @@ export function Hero({ locale }: { locale: Locale }) {
             className="bg-brand absolute -inset-x-6 -inset-y-8 -z-10 rounded-[3rem] opacity-[0.18] blur-3xl dark:opacity-25"
           />
           <WindowFrame>
-            <Screenshot
-              id="macMain"
+            <ThemedDesktopScreenshot
               locale={locale}
               placeholderLabel={placeholder}
               sizes="(min-width: 1280px) 1152px, calc(100vw - 2rem)"
-              preload
+              priority
             />
           </WindowFrame>
         </div>

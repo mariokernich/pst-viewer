@@ -2,20 +2,31 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 /**
- * Device frames for screenshots. Desktop screenshots already contain the
- * window chrome, so the window frame only adds the rounded outline and shadow.
- * Phone and tablet frames draw the device bezel around the screen.
+ * Device frames for screenshots. Desktop screenshots are the window content
+ * without title bar (the app uses an inset title bar), so the window frame
+ * adds the rounded outline, the shadow and the traffic lights in the empty
+ * top-left corner of the sidebar. Phone and tablet frames draw the device
+ * bezel around the screen.
  */
 
 export function WindowFrame({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border border-line-strong bg-card shadow-window sm:rounded-2xl',
+        '@container relative overflow-hidden rounded-xl border border-line-strong bg-card shadow-window sm:rounded-2xl',
         className,
       )}
     >
       {children}
+      <span aria-hidden="true" className="absolute top-[1.15cqw] left-[1.15cqw] flex gap-[0.55cqw]">
+        {['#ff5f57', '#febc2e', '#28c840'].map((color) => (
+          <span
+            key={color}
+            className="block size-[0.85cqw] min-h-1.5 min-w-1.5 rounded-full ring-1 ring-black/10"
+            style={{ background: color }}
+          />
+        ))}
+      </span>
     </div>
   )
 }

@@ -16,24 +16,29 @@ const sizes = {
 } as const
 
 type ButtonLinkProps = Omit<AppLinkProps, 'className'> & {
-  variant?: keyof typeof variants
-  size?: keyof typeof sizes
+  variant?: ButtonVariant
+  size?: ButtonSize
   className?: string
   children: ReactNode
+}
+
+export type ButtonVariant = keyof typeof variants
+export type ButtonSize = keyof typeof sizes
+
+/** Class names of the button style, for elements that cannot use `ButtonLink`. */
+export function buttonClassName(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', className?: string): string {
+  return cn(
+    'inline-flex shrink-0 items-center justify-center rounded-full font-medium whitespace-nowrap transition-[filter,box-shadow,background-color,transform] duration-200 active:scale-[0.98]',
+    variants[variant],
+    sizes[size],
+    className,
+  )
 }
 
 /** A link styled as a button. */
 export function ButtonLink({ variant = 'primary', size = 'md', className, children, ...props }: ButtonLinkProps) {
   return (
-    <AppLink
-      className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-medium whitespace-nowrap transition-[filter,box-shadow,background-color,transform] duration-200 active:scale-[0.98]',
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      {...props}
-    >
+    <AppLink className={buttonClassName(variant, size, className)} {...props}>
       {children}
     </AppLink>
   )

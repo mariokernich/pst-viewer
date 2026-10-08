@@ -1,8 +1,8 @@
 import { ImageIcon } from 'lucide-react'
-import Image from 'next/image'
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/cn'
 import type { Locale } from '@/lib/i18n'
+import { screenshotImage } from '@/lib/screenshot-files'
 import { screenshots, type ScreenshotId, type ScreenshotKind } from '@/lib/screenshots'
 
 interface ScreenshotProps {
@@ -12,8 +12,8 @@ interface ScreenshotProps {
   placeholderLabel: string
   /** `sizes` attribute for the responsive image. */
   sizes: string
-  /** Preload the image (use for the LCP image only). */
-  preload?: boolean
+  /** Fetch with high priority (use for the LCP image only). */
+  priority?: boolean
   /** Horizontal position of the placeholder label (e.g. `start` when the right side is covered). */
   labelAlign?: 'center' | 'start'
   className?: string
@@ -21,40 +21,50 @@ interface ScreenshotProps {
 
 /**
  * Renders a product screenshot from `lib/screenshots.ts`, or a placeholder
- * with the same aspect ratio as long as no image is configured.
+ * with the same aspect ratio if the file does not exist.
+ *
+ * A plain `<img>` with a `srcset` of the pre-generated WebP files is used
+ * because a static export has no image optimizer. Images are lazy-loaded:
+ * hidden ones (e.g. the dark variant in light mode) are never fetched, and
+ * the visible hero image still loads right away with high priority.
  */
 export function Screenshot({
   id,
   locale,
   placeholderLabel,
   sizes,
-  preload = false,
+  priority = false,
   labelAlign = 'center',
   className,
 }: ScreenshotProps) {
   const spec = screenshots[id]
-  const src = spec.src[locale]
+  const image = screenshotImage(spec.file[locale])
 
-  if (src) {
+  if (image) {
     return (
-      <Image
-        src={src}
-        alt={spec.alt[locale]}
-        width={spec.width}
-        height={spec.height}
+      // eslint-disable-next-line @next/next/no-img-element -- static export: no image optimizer, srcset is pre-generated
+      <img
+        src={image.src}
+        srcSet={image.srcSet}
         sizes={sizes}
-        preload={preload}
+        alt={spec.alt[locale]}
+        width={image.width}
+        height={image.height}
+        loading="lazy"
+        decoding="async"
+        fetchPriority={priority ? 'high' : undefined}
         className={cn('block h-auto w-full', className)}
       />
     )
   }
 
+  const { width, height } = spec.fallbackSize
   return (
     <div
       role="img"
       aria-label={`${placeholderLabel}: ${spec.alt[locale]}`}
       className={cn('@container relative w-full overflow-hidden select-none', className)}
-      style={{ aspectRatio: `${spec.width} / ${spec.height}` }}
+      style={{ aspectRatio: `${width} / ${height}` }}
     >
       <Skeleton kind={spec.kind} />
       {/* Phones are often shown cropped, so their label sits in the upper part. */}
@@ -75,6 +85,22 @@ export function Screenshot({
   )
 }
 
+/**
+ * The light and the dark desktop screenshot; only the one matching the
+ * current theme is displayed (`inverted` shows the other one).
+ */
+export function ThemedDesktopScreenshot({
+  inverted = false,
+  ...props
+}: Omit<ScreenshotProps, 'id'> & { inverted?: boolean }) {
+  return (
+    <>
+      <Screenshot id={inverted ? 'desktopDark' : 'desktopLight'} {...props} className={cn('dark:hidden', props.className)} />
+      <Screenshot id={inverted ? 'desktopLight' : 'desktopDark'} {...props} className={cn('hidden dark:block', props.className)} />
+    </>
+  )
+}
+
 /* ---------------------------------------------------------------------------
  * Skeleton UI that hints at the app layout. All sizes use container query
  * units (cqw) so the placeholder scales like an image.
@@ -83,16 +109,6 @@ export function Screenshot({
 function Bar({ width, height = 1.1, className }: { width: string; height?: number; className?: string }) {
   const style: CSSProperties = { width, height: `${height}cqw` }
   return <span className={cn('block shrink-0 rounded-full bg-foreground/[0.08]', className)} style={style} />
-}
-
-function Lights() {
-  return (
-    <span className="flex gap-[0.7cqw]">
-      {['#ff5f57', '#febc2e', '#28c840'].map((color) => (
-        <span key={color} className="block size-[1.1cqw] rounded-full" style={{ background: color }} />
-      ))}
-    </span>
-  )
 }
 
 const listRows = [
@@ -104,12 +120,13 @@ const listRows = [
   ['48%', '78%', '62%'],
 ]
 
-function DesktopSkeleton({ platform }: { platform: 'mac' | 'windows' }) {
+function DesktopSkeleton() {
   return (
     <div aria-hidden="true" className="absolute inset-0 flex bg-card">
       {/* Sidebar */}
       <div className="flex w-[21%] flex-col gap-[1.6cqw] border-r border-line bg-card-muted p-[1.6cqw]">
-        {platform === 'mac' ? <Lights /> : <Bar width="55%" height={1} />}
+        {/* Room for the traffic lights drawn by the window frame */}
+        <span className="block h-[1.1cqw]" />
         <div className="mt-[1cqw] flex flex-col gap-[1.3cqw]">
           {['70%', '52%', '64%', '44%', '58%', '48%', '62%'].map((width, index) => (
             <span key={index} className="flex items-center gap-[0.8cqw]">
@@ -141,13 +158,6 @@ function DesktopSkeleton({ platform }: { platform: 'mac' | 'windows' }) {
       </div>
       {/* Reading pane */}
       <div className="flex flex-1 flex-col p-[2.4cqw]">
-        {platform === 'windows' ? (
-          <span className="mb-[1.2cqw] flex justify-end gap-[2.2cqw] text-[1.2cqw] leading-none text-subtle">
-            <span>—</span>
-            <span>▢</span>
-            <span>✕</span>
-          </span>
-        ) : null}
         <Bar width="62%" height={1.6} className="bg-foreground/[0.14]" />
         <span className="mt-[1.8cqw] flex items-center gap-[1cqw]">
           <span className="block size-[3.4cqw] rounded-full bg-gradient-to-br from-brand-from/50 to-brand-to/50" />
@@ -235,10 +245,8 @@ function TabletSkeleton() {
 
 function Skeleton({ kind }: { kind: ScreenshotKind }) {
   switch (kind) {
-    case 'mac':
-      return <DesktopSkeleton platform="mac" />
-    case 'windows':
-      return <DesktopSkeleton platform="windows" />
+    case 'desktop':
+      return <DesktopSkeleton />
     case 'phone':
       return <PhoneSkeleton />
     case 'tablet':

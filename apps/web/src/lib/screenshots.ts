@@ -1,58 +1,55 @@
 import type { Locale } from './i18n'
 
 /**
- * Product screenshots. Until real images exist, every entry renders a styled
- * placeholder in the matching device frame.
+ * Product screenshots (fictional demo data). The PNG files live in the
+ * repository's `docs/screenshots/` folder; `scripts/copy-screenshots.mjs`
+ * copies them into `public/screenshots/` before `dev` and `build` and records
+ * their real pixel size. A screenshot whose file is missing renders a styled
+ * placeholder with the fallback size below, so the build never breaks.
  *
- * To add a screenshot, put the file into `public/screenshots/` and set `src`
- * for each locale (e.g. `'/screenshots/mac-main-de.png'`). Keep the pixel size
- * in `width`/`height` in sync with the file – it defines the aspect ratio of
- * the frame. Desktop screenshots are full window captures without the drop
- * shadow (macOS: `screencapture -o -w`), mobile screenshots are plain screen
- * captures; the device bezel is drawn by the site.
+ * Desktop screenshots are the window content without title bar and shadow
+ * (the site draws the frame and traffic lights); mobile screenshots are plain
+ * screen captures (the site draws the device bezel).
  */
 
-export type ScreenshotId = 'macMain' | 'windowsMain' | 'iphone' | 'ipad' | 'android'
+export type ScreenshotId = 'desktopLight' | 'desktopDark' | 'iphone' | 'ipad' | 'android'
 
-export type ScreenshotKind = 'mac' | 'windows' | 'phone' | 'tablet'
+export type ScreenshotKind = 'desktop' | 'phone' | 'tablet'
 
 export interface ScreenshotSpec {
   kind: ScreenshotKind
-  width: number
-  height: number
-  src: Record<Locale, string | null>
+  /** File name in `docs/screenshots/` without `.png`, per locale. */
+  file: Record<Locale, string>
+  /** Size used for the placeholder when the file does not exist. */
+  fallbackSize: { width: number; height: number }
   alt: Record<Locale, string>
 }
 
+const perLocale = (name: string): Record<Locale, string> => ({ de: `${name}-de`, en: `${name}-en` })
+
 export const screenshots: Record<ScreenshotId, ScreenshotSpec> = {
-  macMain: {
-    kind: 'mac',
-    width: 2560,
-    height: 1600,
-    // TODO: add the Mac screenshots, e.g. '/screenshots/mac-main-de.png'.
-    src: { de: null, en: null },
+  desktopLight: {
+    kind: 'desktop',
+    file: perLocale('desktop-light'),
+    fallbackSize: { width: 2880, height: 1800 },
     alt: {
-      de: 'PST Viewer auf dem Mac mit Ordnerliste, Nachrichtenliste und Lesebereich',
-      en: 'PST Viewer on the Mac with folder list, message list and reading pane',
+      de: 'PST Viewer am Desktop im hellen Design mit Ordnerliste, Nachrichtenliste und Lesebereich',
+      en: 'PST Viewer on the desktop in light mode with folder list, message list and reading pane',
     },
   },
-  windowsMain: {
-    kind: 'windows',
-    width: 2560,
-    height: 1600,
-    // TODO: add the Windows screenshots.
-    src: { de: null, en: null },
+  desktopDark: {
+    kind: 'desktop',
+    file: perLocale('desktop-dark'),
+    fallbackSize: { width: 2880, height: 1800 },
     alt: {
-      de: 'PST Viewer unter Windows mit geöffnetem Postfach',
-      en: 'PST Viewer on Windows with an open mailbox',
+      de: 'PST Viewer am Desktop im dunklen Design mit Ordnerliste, Nachrichtenliste und Lesebereich',
+      en: 'PST Viewer on the desktop in dark mode with folder list, message list and reading pane',
     },
   },
   iphone: {
     kind: 'phone',
-    width: 1206,
-    height: 2622,
-    // TODO: add the iPhone screenshots once the app is available.
-    src: { de: null, en: null },
+    file: perLocale('iphone'),
+    fallbackSize: { width: 1206, height: 2622 },
     alt: {
       de: 'PST Viewer auf dem iPhone mit der Nachrichtenliste',
       en: 'PST Viewer on the iPhone showing the message list',
@@ -60,21 +57,17 @@ export const screenshots: Record<ScreenshotId, ScreenshotSpec> = {
   },
   ipad: {
     kind: 'tablet',
-    width: 2752,
-    height: 2064,
-    // TODO: add the iPad screenshots once the app is available.
-    src: { de: null, en: null },
+    file: perLocale('ipad'),
+    fallbackSize: { width: 2064, height: 2752 },
     alt: {
-      de: 'PST Viewer auf dem iPad mit Nachrichtenliste und Lesebereich',
-      en: 'PST Viewer on the iPad with message list and reading pane',
+      de: 'PST Viewer auf dem iPad mit Ordnern, Nachrichtenliste und Lesebereich',
+      en: 'PST Viewer on the iPad with folders, message list and reading pane',
     },
   },
   android: {
     kind: 'phone',
-    width: 1080,
-    height: 2400,
-    // TODO: add the Android screenshots once the app is available.
-    src: { de: null, en: null },
+    file: perLocale('android'),
+    fallbackSize: { width: 1344, height: 2992 },
     alt: {
       de: 'PST Viewer auf einem Android-Smartphone mit der Nachrichtenliste',
       en: 'PST Viewer on an Android phone showing the message list',

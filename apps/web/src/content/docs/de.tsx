@@ -1,4 +1,5 @@
-import { Callout, DocLink, Kbd, LegalLink, ShortcutTable, Steps, SyntaxTable } from '@/components/docs/prose'
+import { Callout, DocLink, DownloadTable, Kbd, LegalLink, ShortcutTable, Steps, SyntaxTable } from '@/components/docs/prose'
+import { downloads, github } from '@/lib/site'
 import type { DocsContent } from './types'
 
 const locale = 'de'
@@ -9,11 +10,15 @@ export const docsDe: DocsContent = {
     description:
       'Alles zu PST Viewer: Dateien öffnen, navigieren, suchen, Anhänge ansehen und exportieren – und wie Ihre Daten dabei geschützt bleiben.',
     intro:
-      'PST Viewer öffnet Outlook-Datendateien und Mail-Archive streng schreibgeschützt und komplett lokal. Hier erfahren Sie, wie Sie Nachrichten schnell finden, Anhänge sicher ansehen und Nachrichten exportieren.',
+      'PST Viewer öffnet Outlook-Datendateien und Mail-Archive streng schreibgeschützt und komplett lokal – kostenlos und Open Source. Hier erfahren Sie, wie Sie die App installieren, Nachrichten schnell finden, Anhänge sicher ansehen und Nachrichten exportieren.',
     quickStartTitle: 'Schnellstart',
     quickStart: [
       <>
-        PST Viewer im <strong>Mac App Store</strong> oder im <strong>Microsoft Store</strong> kaufen und installieren.
+        PST Viewer kostenlos aus den <a href={github.releases}>GitHub Releases</a> herunterladen und installieren – siehe{' '}
+        <DocLink locale={locale} id="installation">
+          Installation
+        </DocLink>
+        .
       </>,
       <>
         App starten und <strong>Datei öffnen …</strong> wählen oder <Kbd>⌘O</Kbd> bzw. <Kbd>Ctrl+O</Kbd> drücken.
@@ -35,11 +40,259 @@ export const docsDe: DocsContent = {
     pagerLabel: 'Vorherige und nächste Seite',
   },
   groups: [
-    { title: 'Grundlagen', ids: ['getting-started', 'navigation'] },
+    { title: 'Grundlagen', ids: ['installation', 'getting-started', 'navigation'] },
     { title: 'Funktionen', ids: ['search', 'attachments', 'export'] },
     { title: 'Weitere Themen', ids: ['privacy', 'mobile', 'troubleshooting'] },
   ],
   pages: {
+    installation: {
+      title: 'Installation',
+      description:
+        'PST Viewer kostenlos von GitHub herunterladen, auf Mac, Windows, Linux oder Android installieren und zum ersten Mal öffnen.',
+      sections: [
+        {
+          id: 'download',
+          title: 'Download',
+          body: (
+            <>
+              <p>
+                PST Viewer ist kostenlos und Open Source unter der MIT-Lizenz. Jede Version erscheint in den{' '}
+                <a href={github.releases}>GitHub Releases</a>, zusammen mit dem Changelog. Die Links unten führen immer
+                zur neuesten Version:
+              </p>
+              <DownloadTable locale={locale} />
+              <p>
+                Ein Konto ist nicht nötig, und die App fragt keine persönlichen Daten ab. Mac App Store, Microsoft Store,
+                App Store und Google Play folgen als zusätzlicher Weg – auch dort kostenlos (siehe{' '}
+                <a href="#stores">Stores</a>).
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'macos',
+          title: 'macOS',
+          body: (
+            <>
+              <p>
+                Wählen Sie die passende Version für Ihren Mac. Sie finden sie unter{' '}
+                <strong>Apple-Menü → Über diesen Mac</strong>: „Chip: Apple M…“ bedeutet <strong>Apple Silicon</strong>,
+                „Prozessor: … Intel“ bedeutet <strong>Intel</strong>.
+              </p>
+              <Steps>
+                <li>
+                  Laden Sie <a href={downloads.macArm64.url}>{downloads.macArm64.file}</a> (Apple Silicon) oder{' '}
+                  <a href={downloads.macX64.url}>{downloads.macX64.file}</a> (Intel) herunter.
+                </li>
+                <li>Öffnen Sie das heruntergeladene Festplattenabbild.</li>
+                <li>
+                  Ziehen Sie <strong>PST Viewer</strong> in den Ordner <strong>Programme</strong>.
+                </li>
+                <li>
+                  Starten Sie PST Viewer aus dem Programme-Ordner oder dem Launchpad. Fragt macOS nach, lesen Sie{' '}
+                  <a href="#first-launch">Erster Start</a>.
+                </li>
+              </Steps>
+            </>
+          ),
+        },
+        {
+          id: 'windows',
+          title: 'Windows',
+          body: (
+            <>
+              <p>
+                Die meisten PCs brauchen den <strong>x64</strong>-Installer. Notebooks mit ARM-Prozessor (zum Beispiel
+                Snapdragon) nutzen den <strong>ARM64</strong>-Installer. Den Systemtyp finden Sie unter{' '}
+                <strong>Einstellungen → System → Info</strong>.
+              </p>
+              <Steps>
+                <li>
+                  Laden Sie <a href={downloads.windowsX64.url}>{downloads.windowsX64.file}</a> oder{' '}
+                  <a href={downloads.windowsArm64.url}>{downloads.windowsArm64.file}</a> herunter.
+                </li>
+                <li>
+                  Starten Sie den Installer. Zeigt SmartScreen eine Warnung, lesen Sie{' '}
+                  <a href="#first-launch">Erster Start</a>.
+                </li>
+                <li>
+                  Folgen Sie den Schritten – den Installationsordner können Sie selbst wählen. Administratorrechte sind
+                  nicht nötig.
+                </li>
+                <li>
+                  Starten Sie PST Viewer über das <strong>Startmenü</strong>.
+                </li>
+              </Steps>
+            </>
+          ),
+        },
+        {
+          id: 'linux',
+          title: 'Linux',
+          body: (
+            <>
+              <p>
+                Das <strong>AppImage</strong> läuft auf den meisten Distributionen ohne Installation. Machen Sie es
+                ausführbar und starten Sie es:
+              </p>
+              <pre>
+                <code>{`chmod +x ${downloads.linuxAppImage.file}\n./${downloads.linuxAppImage.file}`}</code>
+              </pre>
+              <p>
+                Unter Debian, Ubuntu und verwandten Distributionen können Sie stattdessen das <strong>.deb</strong>-Paket
+                installieren. PST Viewer erscheint dann im Anwendungsmenü:
+              </p>
+              <pre>
+                <code>{`sudo apt install ./${downloads.linuxDeb.file}`}</code>
+              </pre>
+              <Callout title="Das AppImage startet nicht?">
+                Manche Distributionen brauchen für AppImages die Bibliothek FUSE 2 (unter Ubuntu zum Beispiel das Paket{' '}
+                <code>libfuse2</code>). Beide Varianten sind für 64-Bit-x86-Systeme.
+              </Callout>
+            </>
+          ),
+        },
+        {
+          id: 'first-launch',
+          title: 'Erster Start: die App bestätigen',
+          body: (
+            <>
+              <p>
+                Die Desktop-Versionen auf GitHub sind eventuell noch nicht signiert. An der Funktion von PST Viewer
+                ändert das nichts, aber macOS und Windows können den Herausgeber nicht prüfen und fragen beim ersten
+                Öffnen nach. Das ist nur einmal nötig. Unsicher? Der vollständige{' '}
+                <a href={github.repo}>Quellcode</a> ist öffentlich – Sie können nachsehen, was Sie installieren.
+              </p>
+              <h3>macOS (Gatekeeper)</h3>
+              <p>Meldet macOS, dass PST Viewer nicht geöffnet oder nicht überprüft werden kann:</p>
+              <Steps>
+                <li>
+                  <strong>Bis macOS 14:</strong> Klicken Sie im Programme-Ordner bei gedrückter Ctrl-Taste (oder mit
+                  der rechten Maustaste) auf PST Viewer, wählen Sie <strong>Öffnen</strong> und bestätigen Sie mit{' '}
+                  <strong>Öffnen</strong>.
+                </li>
+                <li>
+                  <strong>Ab macOS 15:</strong> Versuchen Sie einmal, die App zu öffnen, und schließen Sie die Meldung.
+                  Öffnen Sie dann <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>, scrollen Sie zu{' '}
+                  <strong>Sicherheit</strong> und klicken Sie neben PST Viewer auf <strong>Dennoch öffnen</strong>.
+                  Bestätigen Sie mit Ihrem Passwort.
+                </li>
+              </Steps>
+              <p>
+                Meldet macOS stattdessen, die App sei „beschädigt“, blockiert das Quarantäne-Attribut des Downloads die
+                App. Wenn Sie sicher sind, dass die Datei von der offiziellen Release-Seite stammt, können Sie es im
+                Terminal entfernen:
+              </p>
+              <pre>
+                <code>{`xattr -dr com.apple.quarantine "/Applications/PST Viewer.app"`}</code>
+              </pre>
+              <h3>Windows (SmartScreen)</h3>
+              <p>
+                Erscheint beim Starten des Installers „Der Computer wurde durch Windows geschützt“, klicken Sie auf{' '}
+                <strong>Weitere Informationen</strong> und dann auf <strong>Trotzdem ausführen</strong>.
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'android',
+          title: 'Android',
+          body: (
+            <>
+              <p>
+                Die Android-App läuft auf Smartphones und Tablets ab Android 8.0. Bis sie bei Google Play erscheint,
+                installieren Sie das APK von GitHub:
+              </p>
+              <Steps>
+                <li>
+                  Öffnen Sie diese Seite auf Ihrem Android-Gerät und laden Sie{' '}
+                  <a href={downloads.android.url}>{downloads.android.file}</a> herunter.
+                </li>
+                <li>Öffnen Sie die heruntergeladene Datei, zum Beispiel über die Benachrichtigung oder die Downloads-App.</li>
+                <li>
+                  Fragt Android nach, erlauben Sie Ihrem Browser oder Dateimanager, <strong>unbekannte Apps zu
+                  installieren</strong>, und tippen Sie auf <strong>Installieren</strong>.
+                </li>
+              </Steps>
+              <p>Für ein Update installieren Sie das neuere APK einfach über die vorhandene App – Ihre Einstellungen bleiben erhalten.</p>
+            </>
+          ),
+        },
+        {
+          id: 'ios',
+          title: 'iPhone & iPad',
+          body: (
+            <>
+              <p>
+                Die App für iPhone und iPad (iOS und iPadOS ab Version 17) erscheint demnächst kostenlos im{' '}
+                <strong>App Store</strong>. Apple erlaubt keine Installation aus anderen Quellen – bis dahin bleibt nur,
+                die App selbst zu bauen.
+              </p>
+              <p>
+                Mit einem Mac und Xcode können Sie PST Viewer aus dem Quellcode bauen und auf Ihrem eigenen Gerät
+                installieren. Voraussetzungen und Schritte beschreibt die{' '}
+                <a href={github.iosSource}>Anleitung im Repository</a> (auf Englisch).
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'updates',
+          title: 'Updates',
+          body: (
+            <p>
+              Neue Versionen erscheinen in den <a href={github.releases}>GitHub Releases</a>; der Changelog zeigt, was
+              sich geändert hat. Laden Sie die neue Version herunter und installieren Sie sie über die vorhandene – Ihre
+              Archive sind davon nicht betroffen, denn PST Viewer verändert sie nie.
+            </p>
+          ),
+        },
+        {
+          id: 'stores',
+          title: 'Stores',
+          body: (
+            <>
+              <p>
+                Zusätzlich zu GitHub erscheint PST Viewer in den App Stores – als kostenlose App ohne In-App-Käufe.
+              </p>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Gerät</th>
+                      <th scope="col">Store</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Mac</td>
+                      <td>Mac App Store</td>
+                      <td>Demnächst</td>
+                    </tr>
+                    <tr>
+                      <td>Windows</td>
+                      <td>Microsoft Store</td>
+                      <td>Demnächst</td>
+                    </tr>
+                    <tr>
+                      <td>iPhone &amp; iPad</td>
+                      <td>App Store</td>
+                      <td>Demnächst</td>
+                    </tr>
+                    <tr>
+                      <td>Android</td>
+                      <td>Google Play</td>
+                      <td>Demnächst</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ),
+        },
+      ],
+    },
     'getting-started': {
       title: 'Erste Schritte',
       description: 'PST Viewer installieren, die erste Datei öffnen und verstehen, was „schreibgeschützt“ bedeutet.',
@@ -50,13 +303,17 @@ export const docsDe: DocsContent = {
           body: (
             <>
               <p>
-                PST Viewer gibt es für den Mac im <strong>Mac App Store</strong> und für Windows im{' '}
-                <strong>Microsoft Store</strong>. Der Preis beträgt einmalig 4,99 € pro Store – ohne Abo, ohne Konto,
-                ohne Werbung und ohne In-App-Käufe.
+                PST Viewer ist kostenlos und Open Source – ohne Abo, ohne Konto, ohne Werbung und ohne In-App-Käufe.
+                Laden Sie die App für macOS, Windows, Linux oder Android aus den{' '}
+                <a href={github.releases}>GitHub Releases</a> herunter.
               </p>
               <p>
-                Die Apps für iPhone und iPad (App Store) sowie für Android (Google Play) sind in Entwicklung. Mehr dazu
-                unter <DocLink locale={locale} id="mobile">Mobile Apps</DocLink>.
+                Schritt-für-Schritt-Anleitungen für alle Plattformen – auch dazu, was zu tun ist, wenn macOS oder Windows
+                beim ersten Start nachfragt – finden Sie unter{' '}
+                <DocLink locale={locale} id="installation">
+                  Installation
+                </DocLink>
+                . Zu iPhone und iPad lesen Sie <DocLink locale={locale} id="mobile">Mobile Apps</DocLink>.
               </p>
             </>
           ),
@@ -70,7 +327,7 @@ export const docsDe: DocsContent = {
                 <li>Starten Sie PST Viewer.</li>
                 <li>
                   Wählen Sie <strong>Datei öffnen …</strong> oder drücken Sie <Kbd>⌘O</Kbd> (Mac) bzw.{' '}
-                  <Kbd>Ctrl+O</Kbd> (Windows).
+                  <Kbd>Ctrl+O</Kbd> (Windows, Linux).
                 </li>
                 <li>Wählen Sie eine PST-, MSG-, EML- oder MBOX-Datei aus.</li>
               </Steps>
@@ -541,6 +798,17 @@ export const docsDe: DocsContent = {
           ),
         },
         {
+          id: 'open-source',
+          title: 'Open Source',
+          body: (
+            <p>
+              Der vollständige Quellcode ist unter der MIT-Lizenz öffentlich auf <a href={github.repo}>GitHub</a>.
+              Jede und jeder kann nachprüfen, dass PST Viewer lokal arbeitet, nichts sendet und Dateien nur lesend
+              öffnet – und Sicherheitsprobleme melden.
+            </p>
+          ),
+        },
+        {
           id: 'read-only',
           title: 'Ihre Dateien bleiben unverändert',
           body: (
@@ -588,8 +856,9 @@ export const docsDe: DocsContent = {
           title: 'Diese Website',
           body: (
             <p>
-              Auch diese Website kommt ohne Cookies und ohne Tracking aus. Wenn Sie eine Darstellung (hell, dunkel oder
-              System) wählen, wird diese Einstellung nur lokal in Ihrem Browser gespeichert. Details finden Sie in der{' '}
+              Auch diese Website kommt ohne Cookies und ohne Tracking aus. Sie wird über GitHub Pages bereitgestellt; wenn
+              Sie eine Darstellung (hell, dunkel oder System) wählen, wird diese Einstellung nur lokal in Ihrem Browser
+              gespeichert. Details finden Sie in der{' '}
               <LegalLink locale={locale} id="privacy">
                 Datenschutzerklärung
               </LegalLink>
@@ -608,8 +877,13 @@ export const docsDe: DocsContent = {
           title: 'Aktueller Stand',
           body: (
             <p>
-              Die Apps für iPhone, iPad und Android sind in Entwicklung. Sie erhalten denselben Funktionsumfang wie die
-              Desktop-App für Mac und Windows.
+              PST Viewer für Android gibt es schon jetzt als APK auf GitHub, Google Play folgt. Die App für iPhone und
+              iPad erscheint demnächst im App Store – bis dahin können Sie sie mit Xcode aus dem Quellcode bauen. Beide
+              bieten denselben Funktionsumfang wie die Desktop-App. Die Installation ist unter{' '}
+              <DocLink locale={locale} id="installation" hash="android">
+                Installation
+              </DocLink>{' '}
+              beschrieben.
             </p>
           ),
         },
@@ -622,20 +896,24 @@ export const docsDe: DocsContent = {
                 <thead>
                   <tr>
                     <th scope="col">Gerät</th>
+                    <th scope="col">Schon jetzt</th>
                     <th scope="col">Store</th>
-                    <th scope="col">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>iPhone &amp; iPad</td>
-                    <td>App Store</td>
-                    <td>In Entwicklung</td>
+                    <td>iPhone &amp; iPad (ab iOS 17)</td>
+                    <td>
+                      Mit Xcode <a href={github.iosSource}>aus dem Quellcode bauen</a>
+                    </td>
+                    <td>App Store – demnächst</td>
                   </tr>
                   <tr>
-                    <td>Android</td>
-                    <td>Google Play</td>
-                    <td>In Entwicklung</td>
+                    <td>Android (ab 8.0)</td>
+                    <td>
+                      <a href={downloads.android.url}>APK von GitHub</a>
+                    </td>
+                    <td>Google Play – demnächst</td>
                   </tr>
                 </tbody>
               </table>
@@ -659,12 +937,12 @@ export const docsDe: DocsContent = {
           ),
         },
         {
-          id: 'pricing',
-          title: 'Preis',
+          id: 'free',
+          title: 'Kostenlos',
           body: (
             <p>
-              Wie auf dem Desktop: einmalig 4,99 € pro Store – ohne Abo, ohne Konto, ohne Werbung und ohne
-              In-App-Käufe.
+              Wie auf dem Desktop: PST Viewer ist kostenlos und Open Source – ohne Abo, ohne Konto, ohne Werbung und ohne
+              In-App-Käufe. Daran ändert sich auch im App Store und bei Google Play nichts.
             </p>
           ),
         },
@@ -674,6 +952,20 @@ export const docsDe: DocsContent = {
       title: 'Fehlerbehebung & FAQ',
       description: 'Lösungen für häufige Fragen und Probleme.',
       sections: [
+        {
+          id: 'app-blocked',
+          title: 'macOS oder Windows öffnet die App nicht',
+          body: (
+            <p>
+              Die Desktop-Versionen sind eventuell noch nicht signiert, deshalb fragen Gatekeeper (macOS) bzw.
+              SmartScreen (Windows) beim ersten Start nach. Die Schritte stehen unter{' '}
+              <DocLink locale={locale} id="installation" hash="first-launch">
+                Erster Start: die App bestätigen
+              </DocLink>
+              .
+            </p>
+          ),
+        },
         {
           id: 'cannot-open',
           title: 'Eine Datei lässt sich nicht öffnen',
@@ -753,6 +1045,17 @@ export const docsDe: DocsContent = {
                 Schreibgeschützt – versprochen
               </DocLink>
               .
+            </p>
+          ),
+        },
+        {
+          id: 'report-bug',
+          title: 'Fehler melden oder Funktion vorschlagen',
+          body: (
+            <p>
+              PST Viewer wird öffentlich auf GitHub entwickelt. Melden Sie Fehler und Ideen bitte als{' '}
+              <a href={github.issues}>Issue</a> – und hängen Sie niemals echte Postfächer oder private Nachrichten an.
+              Pull Requests sind ebenfalls willkommen.
             </p>
           ),
         },

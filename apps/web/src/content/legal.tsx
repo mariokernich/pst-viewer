@@ -6,9 +6,14 @@ import type { LegalId } from '@/lib/routes'
 /**
  * Legal pages. These are PLACEHOLDERS: every <Todo> has to be completed (and
  * the texts reviewed) before the site goes live. The website facts stated
- * here – no cookies, no tracking, fonts served locally, theme stored in
- * localStorage – reflect the current implementation; keep them in sync.
+ * here – hosted on GitHub Pages, no cookies, no tracking, fonts served with
+ * the site, theme stored in localStorage – reflect the current
+ * implementation; keep them in sync. PST Viewer is free and open source, so
+ * there is nothing about sales or payments.
  */
+
+const githubPrivacyStatement =
+  'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement'
 
 export interface LegalPage {
   title: string
@@ -50,12 +55,10 @@ const legalDe: Record<LegalId, LegalPage> = {
         <p>
           Mario Kernich, <Todo>Anschrift</Todo>
         </p>
-        <h2>Verbraucherstreitbeilegung</h2>
+        <h2>Open-Source-Projekt</h2>
         <p>
-          <Todo>
-            Hinweis nach § 36 VSBG ergänzen, ob Sie bereit oder verpflichtet sind, an Streitbeilegungsverfahren vor
-            einer Verbraucherschlichtungsstelle teilzunehmen
-          </Todo>
+          PST Viewer ist ein kostenloses Open-Source-Projekt unter der MIT-Lizenz. Der Quellcode wird öffentlich auf
+          GitHub entwickelt: <a href="https://github.com/mariokernich/pst-viewer">github.com/mariokernich/pst-viewer</a>
         </p>
       </>
     ),
@@ -77,20 +80,24 @@ const legalDe: Record<LegalId, LegalPage> = {
         </p>
         <h2>2. Überblick</h2>
         <p>
-          Diese Website informiert über die App PST Viewer. Sie setzt keine Cookies, verwendet keine Analyse- oder
-          Tracking-Werkzeuge und bindet keine Inhalte von Drittanbietern ein. Schriften und alle übrigen Dateien werden
-          direkt von unserem Server ausgeliefert.
+          Diese Website informiert über die kostenlose Open-Source-App PST Viewer. Sie setzt keine Cookies, verwendet
+          keine Analyse- oder Tracking-Werkzeuge und bindet keine Inhalte von Drittanbietern ein. Schriften, Bilder und
+          alle übrigen Dateien werden zusammen mit der Website über GitHub Pages ausgeliefert.
         </p>
-        <h2>3. Hosting und Server-Logdateien</h2>
+        <h2>3. Hosting über GitHub Pages und Server-Logdateien</h2>
         <p>
-          Beim Aufruf der Website verarbeitet der Hosting-Anbieter technisch notwendige Daten (z. B. IP-Adresse,
-          Zeitpunkt des Abrufs, aufgerufene Seite, Browsertyp), um die Website auszuliefern und ihre Sicherheit zu
-          gewährleisten.
+          Diese Website wird über GitHub Pages bereitgestellt, einen Dienst der GitHub, Inc., 88 Colin P. Kelly Jr.
+          Street, San Francisco, CA 94107, USA. Beim Aufruf der Website verarbeitet GitHub technisch notwendige Daten –
+          insbesondere Ihre IP-Adresse, Zeitpunkt des Abrufs, aufgerufene Seite und Browsertyp – in Server-Logdateien, um
+          die Website auszuliefern und ihre Sicherheit zu gewährleisten. Dabei können Daten in die USA übermittelt
+          werden. Einzelheiten finden Sie in der{' '}
+          <a href={githubPrivacyStatement}>Datenschutzerklärung von GitHub</a>.
         </p>
         <p>
           <Todo>
-            Hosting-Anbieter, Serverstandort, Speicherdauer der Logdateien, Rechtsgrundlage (z. B. Art. 6 Abs. 1 lit. f
-            DSGVO) und ggf. Auftragsverarbeitungsvertrag ergänzen
+            Rechtsgrundlage (z. B. Art. 6 Abs. 1 lit. f DSGVO, berechtigtes Interesse an einer sicheren und
+            zuverlässigen Bereitstellung), Grundlage der Übermittlung in die USA (z. B. EU-US Data Privacy Framework)
+            und Speicherdauer der Logdateien prüfen und ergänzen
           </Todo>
         </p>
         <h2>4. Keine Cookies, kein Tracking</h2>
@@ -110,25 +117,30 @@ const legalDe: Record<LegalId, LegalPage> = {
             Beschreiben, wie Anfragen (z. B. per E-Mail) verarbeitet werden: Zweck, Rechtsgrundlage und Speicherdauer
           </Todo>
         </p>
-        <h2>7. Die App PST Viewer</h2>
+        <h2>7. Links zu GitHub</h2>
+        <p>
+          Downloads, Quellcode, Releases und Issues liegen auf GitHub. Wenn Sie einem dieser Links folgen, verlassen Sie
+          diese Website; für die Verarbeitung Ihrer Daten durch GitHub gilt dann die{' '}
+          <a href={githubPrivacyStatement}>Datenschutzerklärung von GitHub</a>.
+        </p>
+        <h2>8. Die App PST Viewer</h2>
         <p>
           Die App verarbeitet Ihre Dateien ausschließlich lokal auf Ihrem Gerät. Es werden keine Inhalte hochgeladen,
           keine Nutzungsdaten (Telemetrie) erhoben und kein Tracking eingesetzt. Externe Bilder in E-Mails werden
-          standardmäßig blockiert.
+          standardmäßig blockiert und nur geladen, wenn Sie es für eine Nachricht erlauben.
         </p>
         <p>
-          Käufe werden über den jeweiligen Store abgewickelt (Mac App Store, Microsoft Store, App Store, Google Play);
-          dafür gelten die Datenschutzbestimmungen des jeweiligen Store-Betreibers.{' '}
-          <Todo>Angaben zu den Stores prüfen und ggf. ergänzen</Todo>
+          Laden Sie die App künftig über einen Store herunter (Mac App Store, Microsoft Store, App Store, Google Play),
+          gelten für den Download die Datenschutzbestimmungen des jeweiligen Store-Betreibers.
         </p>
-        <h2>8. Ihre Rechte</h2>
+        <h2>9. Ihre Rechte</h2>
         <p>
           <Todo>
             Betroffenenrechte nach Art. 15 bis 21 DSGVO sowie das Beschwerderecht bei einer Aufsichtsbehörde nach Art.
             77 DSGVO ergänzen
           </Todo>
         </p>
-        <h2>9. Stand</h2>
+        <h2>10. Stand</h2>
         <p>
           <Todo>Datum der letzten Aktualisierung</Todo>
         </p>
@@ -169,12 +181,10 @@ const legalEn: Record<LegalId, LegalPage> = {
         <p>
           Mario Kernich, <Todo>address</Todo>
         </p>
-        <h2>Consumer dispute resolution</h2>
+        <h2>Open source project</h2>
         <p>
-          <Todo>
-            add the statement required by Section 36 VSBG on whether you are willing or obliged to take part in dispute
-            resolution proceedings before a consumer arbitration board
-          </Todo>
+          PST Viewer is a free open source project under the MIT license. The source code is developed in public on
+          GitHub: <a href="https://github.com/mariokernich/pst-viewer">github.com/mariokernich/pst-viewer</a>
         </p>
       </>
     ),
@@ -195,18 +205,23 @@ const legalEn: Record<LegalId, LegalPage> = {
         </p>
         <h2>2. Overview</h2>
         <p>
-          This website provides information about the PST Viewer app. It sets no cookies, uses no analytics or tracking
-          tools and embeds no third-party content. Fonts and all other files are served directly from our server.
+          This website provides information about the free open source app PST Viewer. It sets no cookies, uses no
+          analytics or tracking tools and embeds no third-party content. Fonts, images and all other files are served
+          together with the website via GitHub Pages.
         </p>
-        <h2>3. Hosting and server log files</h2>
+        <h2>3. Hosting on GitHub Pages and server log files</h2>
         <p>
-          When you visit the website, the hosting provider processes technically necessary data (e.g. IP address, time
-          of access, requested page, browser type) to deliver the website and keep it secure.
+          This website is hosted on GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San
+          Francisco, CA 94107, USA. When you visit the website, GitHub processes technically necessary data – in
+          particular your IP address, time of access, requested page and browser type – in server log files to deliver
+          the website and keep it secure. This may involve a transfer of data to the USA. For details, see the{' '}
+          <a href={githubPrivacyStatement}>GitHub General Privacy Statement</a>.
         </p>
         <p>
           <Todo>
-            add the hosting provider, server location, log retention period, legal basis (e.g. Art. 6(1)(f) GDPR) and,
-            if applicable, the data processing agreement
+            review and add the legal basis (e.g. Art. 6(1)(f) GDPR, legitimate interest in a secure and reliable
+            website), the basis for the transfer to the USA (e.g. the EU-US Data Privacy Framework) and the log retention
+            period
           </Todo>
         </p>
         <h2>4. No cookies, no tracking</h2>
@@ -221,23 +236,30 @@ const legalEn: Record<LegalId, LegalPage> = {
         <p>
           <Todo>describe how enquiries (e.g. by email) are processed: purpose, legal basis and retention period</Todo>
         </p>
-        <h2>7. The PST Viewer app</h2>
+        <h2>7. Links to GitHub</h2>
+        <p>
+          Downloads, source code, releases and issues are hosted on GitHub. When you follow one of these links, you leave
+          this website, and the <a href={githubPrivacyStatement}>GitHub General Privacy Statement</a> applies to the
+          processing of your data by GitHub.
+        </p>
+        <h2>8. The PST Viewer app</h2>
         <p>
           The app processes your files exclusively on your device. No content is uploaded, no usage data (telemetry) is
-          collected and no tracking is used. Remote images in emails are blocked by default.
+          collected and no tracking is used. Remote images in emails are blocked by default and only loaded if you allow
+          them for a message.
         </p>
         <p>
-          Purchases are handled by the respective store (Mac App Store, Microsoft Store, App Store, Google Play); the
-          privacy policy of the respective store operator applies. <Todo>review and complete the store information</Todo>
+          If you download the app from a store in the future (Mac App Store, Microsoft Store, App Store, Google Play),
+          the privacy policy of the respective store operator applies to that download.
         </p>
-        <h2>8. Your rights</h2>
+        <h2>9. Your rights</h2>
         <p>
           <Todo>
             add the data subject rights under Art. 15 to 21 GDPR and the right to lodge a complaint with a supervisory
             authority under Art. 77 GDPR
           </Todo>
         </p>
-        <h2>9. Last updated</h2>
+        <h2>10. Last updated</h2>
         <p>
           <Todo>date of the last update</Todo>
         </p>

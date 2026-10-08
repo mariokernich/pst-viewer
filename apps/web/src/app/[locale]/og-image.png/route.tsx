@@ -5,20 +5,27 @@ import { landing } from '@/content/landing'
 import { defaultLocale, isLocale, locales } from '@/lib/i18n'
 import { ogImage } from '@/lib/og'
 
-export const alt = ogImage.alt
-export const size = ogImage.size
-export const contentType = ogImage.contentType
+/*
+ * Open Graph image per locale, prerendered into `out/<locale>/og-image.png`.
+ * A route handler instead of the `opengraph-image` file convention, because
+ * the export writes that one without file extension (GitHub Pages would serve
+ * it as `application/octet-stream`, which social networks reject).
+ * Referenced by `lib/metadata.ts` via `ogImagePath()`.
+ */
 export const dynamicParams = false
+export const dynamic = 'force-static'
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
 }
 
+const size = ogImage.size
+
 // Geist ships static TTF files, which the image renderer needs (no WOFF2 / variable fonts).
 const fontDir = join(process.cwd(), 'node_modules/geist/dist/fonts/geist-sans')
 const fonts = Promise.all([readFile(join(fontDir, 'Geist-Regular.ttf')), readFile(join(fontDir, 'Geist-SemiBold.ttf'))])
 
-export default async function OpenGraphImage({ params }: { params: Promise<{ locale: string }> }) {
+export async function GET(_request: Request, { params }: RouteContext<'/[locale]/og-image.png'>) {
   const { locale: param } = await params
   const locale = isLocale(param) ? param : defaultLocale
   const t = landing[locale].hero

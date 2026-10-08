@@ -1,13 +1,19 @@
 import { ImageResponse } from 'next/og'
 
-export const size = { width: 180, height: 180 }
-export const contentType = 'image/png'
+const size = { width: 180, height: 180 }
+
+// Prerendered into `out/apple-touch-icon.png` by the static export.
+export const dynamic = 'force-static'
 
 /**
  * Apple touch icon: full-bleed version of the app icon (iOS applies its own
  * rounded mask, so the squircle and margins of the macOS icon are omitted).
+ *
+ * A route handler instead of the `apple-icon` file convention: the export
+ * writes that one without file extension (GitHub Pages would serve it as
+ * `application/octet-stream`) and links it without the base path.
  */
-export default function AppleIcon() {
+export function GET() {
   return new ImageResponse(
     (
       <div

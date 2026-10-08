@@ -1,6 +1,8 @@
 import { ArrowRight } from 'lucide-react'
 import { AppIcon } from '@/components/brand/app-icon'
+import { DownloadCta } from '@/components/download/download-cta'
 import { AppLink } from '@/components/ui/app-link'
+import { common } from '@/content/common'
 import { landing } from '@/content/landing'
 import type { Locale } from '@/lib/i18n'
 import { pathFor, sectionPath } from '@/lib/routes'
@@ -21,12 +23,11 @@ export function FinalCta({ locale }: { locale: Locale }) {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-pretty text-white/85">{t.text}</p>
         <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-          <AppLink
-            href={sectionPath(locale, 'pricing')}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 font-semibold text-[#1d1d1f] shadow-soft transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-white active:scale-[0.98]"
-          >
-            {t.primaryCta}
-          </AppLink>
+          <DownloadCta
+            labels={common[locale].download}
+            fallbackHref={sectionPath(locale, 'download')}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 font-semibold whitespace-nowrap text-[#1d1d1f] shadow-soft transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-white active:scale-[0.98]"
+          />
           <AppLink
             href={pathFor(locale, { page: 'docs' })}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 px-6 font-semibold text-white ring-1 ring-white/30 transition-colors duration-200 hover:bg-white/25 focus-visible:outline-white"

@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/layout/site-header'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 import { common } from '@/content/common'
 import { isLocale, locales } from '@/lib/i18n'
+import { siteIcons } from '@/lib/metadata'
 import { siteConfig, siteUrl } from '@/lib/site'
 import '../globals.css'
 
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     authors: [{ name: siteConfig.owner }],
     creator: siteConfig.owner,
     formatDetection: { telephone: false, email: false, address: false },
+    icons: siteIcons,
   }
 }
 

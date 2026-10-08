@@ -1,10 +1,12 @@
 import { AppIcon } from '@/components/brand/app-icon'
+import { GitHubIcon } from '@/components/brand/github-icon'
 import { ThemeSwitcher } from '@/components/theme/theme-switcher'
 import { AppLink } from '@/components/ui/app-link'
 import { ButtonLink } from '@/components/ui/button-link'
 import { common } from '@/content/common'
 import type { Locale } from '@/lib/i18n'
 import { pathFor, sectionPath } from '@/lib/routes'
+import { github } from '@/lib/site'
 import { LanguageToggle } from './language-switcher'
 import { MobileNav, type NavItem } from './mobile-nav'
 
@@ -13,11 +15,11 @@ export function SiteHeader({ locale }: { locale: Locale }) {
   const items: NavItem[] = [
     { href: sectionPath(locale, 'features'), label: t.nav.features },
     { href: sectionPath(locale, 'platforms'), label: t.nav.platforms },
-    { href: sectionPath(locale, 'pricing'), label: t.nav.pricing },
+    { href: sectionPath(locale, 'openSource'), label: t.nav.openSource },
     { href: pathFor(locale, { page: 'docs' }), label: t.nav.docs },
     { href: sectionPath(locale, 'faq'), label: t.nav.faq },
   ]
-  const cta: NavItem = { href: sectionPath(locale, 'pricing'), label: t.header.cta }
+  const cta: NavItem = { href: sectionPath(locale, 'download'), label: t.header.cta }
 
   return (
     <header className="sticky top-0 z-50">
@@ -30,16 +32,16 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           className="-ml-1 flex items-center gap-2.5 rounded-lg px-1 py-1"
         >
           <AppIcon size={30} />
-          <span className="text-[17px] font-semibold tracking-tight text-foreground">PST Viewer</span>
+          <span className="whitespace-nowrap text-[17px] font-semibold tracking-tight text-foreground">PST Viewer</span>
         </AppLink>
 
         <nav aria-label={t.nav.label} className="mx-auto hidden lg:block">
-          <ul className="flex items-center gap-1">
+          <ul className="flex items-center gap-0.5 xl:gap-1">
             {items.map((item) => (
               <li key={item.href}>
                 <AppLink
                   href={item.href}
-                  className="inline-flex h-9 items-center rounded-full px-3.5 text-sm font-medium text-muted transition-colors hover:bg-card-muted hover:text-foreground"
+                  className="inline-flex h-9 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-medium text-muted xl:px-3.5 transition-colors hover:bg-card-muted hover:text-foreground"
                 >
                   {item.label}
                 </AppLink>
@@ -51,12 +53,21 @@ export function SiteHeader({ locale }: { locale: Locale }) {
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <LanguageToggle locale={locale} title={t.language.switchTo} className="max-lg:hidden" />
           <ThemeSwitcher labels={t.theme} className="max-lg:hidden" />
+          <a
+            href={github.repo}
+            title={t.header.githubLabel}
+            aria-label={t.header.githubLabel}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-muted transition-colors hover:bg-card-muted hover:text-foreground xl:px-3"
+          >
+            <GitHubIcon className="size-[18px]" />
+            <span className="max-xl:hidden">{t.header.github}</span>
+          </a>
           <ButtonLink href={cta.href} size="sm" className="max-sm:hidden">
             {cta.label}
           </ButtonLink>
           <MobileNav
             locale={locale}
-            items={items}
+            items={[...items, { href: github.repo, label: t.header.githubLabel }]}
             cta={cta}
             labels={{ open: t.header.openMenu, close: t.header.closeMenu, nav: t.nav.label, language: t.language.label }}
             themeLabels={t.theme}

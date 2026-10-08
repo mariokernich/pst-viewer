@@ -15,12 +15,13 @@ export interface LandingContent {
     description: string
   }
   hero: {
-    eyebrow: string
     titleLead: string
     titleAccent: string
     subtitle: string
-    primaryCta: string
+    /** Secondary call to action (GitHub). */
     secondaryCta: string
+    /** Line below the buttons, followed by a link to all downloads. */
+    availability: string
     trust: [string, string, string, string]
   }
   formats: {
@@ -56,26 +57,41 @@ export interface LandingContent {
     docsLink: string
   }
   platforms: SectionIntro & {
-    badgeDesktop: string
-    badgeInDevelopment: string
+    badgeAvailable: string
+    badgeAndroid: string
+    badgeComingSoon: string
+    downloadsLink: string
     items: {
-      mac: TitledText
-      windows: TitledText
-      ios: TitledText
+      desktop: TitledText
+      ios: TitledText & { sourceLink: string }
       android: TitledText
     }
   }
   useCases: SectionIntro & {
     items: Array<TitledText & { note?: string }>
   }
-  pricing: SectionIntro & {
-    planName: string
-    planText: string
-    includedTitle: string
-    included: string[]
+  openSource: SectionIntro & {
+    cardTitle: string
+    cardText: string
+    free: string
+    freeNote: string
     excluded: string[]
+    pointsTitle: string
+    points: TitledText[]
+    repoCta: string
+    issuesCta: string
+    licenseLink: string
+  }
+  download: SectionIntro & {
+    allReleases: string
+    iosText: string
+    iosSourceLink: string
+    unsignedTitle: string
+    unsignedText: string
+    unsignedSteps: Array<{ platform: string; text: string }>
+    unsignedLink: string
     storesTitle: string
-    footnote: string
+    storesText: string
   }
   faq: SectionIntro & {
     items: Array<{ question: string; answer: string }>
@@ -84,7 +100,6 @@ export interface LandingContent {
   finalCta: {
     title: string
     text: string
-    primaryCta: string
     secondaryCta: string
   }
 }

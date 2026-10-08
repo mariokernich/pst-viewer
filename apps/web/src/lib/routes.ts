@@ -11,6 +11,7 @@ import { defaultLocale, isLocale, locales, type Locale } from './i18n'
  */
 
 export const docIds = [
+  'installation',
   'getting-started',
   'navigation',
   'search',
@@ -24,6 +25,7 @@ export const docIds = [
 export type DocId = (typeof docIds)[number]
 
 export const docSlugs: Record<DocId, Record<Locale, string>> = {
+  installation: { de: 'installation', en: 'installation' },
   'getting-started': { de: 'erste-schritte', en: 'getting-started' },
   navigation: { de: 'navigation', en: 'navigation' },
   search: { de: 'suche', en: 'search' },
@@ -50,7 +52,8 @@ export const sectionIds = {
   privacy: 'privacy',
   platforms: 'platforms',
   useCases: 'use-cases',
-  pricing: 'pricing',
+  openSource: 'open-source',
+  download: 'download',
   faq: 'faq',
 } as const
 
@@ -62,17 +65,21 @@ export type Route =
   | { page: 'doc'; id: DocId }
   | { page: 'legal'; id: LegalId }
 
-/** Absolute path (without origin) of a route in the given locale. */
+/**
+ * Root-relative path (without origin and base path) of a route in the given
+ * locale. Paths end with a slash, matching `trailingSlash: true` and the
+ * `index.html` files of the static export.
+ */
 export function pathFor(locale: Locale, route: Route): string {
   switch (route.page) {
     case 'home':
-      return `/${locale}`
+      return `/${locale}/`
     case 'docs':
-      return `/${locale}/docs`
+      return `/${locale}/docs/`
     case 'doc':
-      return `/${locale}/docs/${docSlugs[route.id][locale]}`
+      return `/${locale}/docs/${docSlugs[route.id][locale]}/`
     case 'legal':
-      return `/${locale}/${legalSlugs[route.id][locale]}`
+      return `/${locale}/${legalSlugs[route.id][locale]}/`
   }
 }
 
@@ -81,13 +88,14 @@ export function sectionPath(locale: Locale, section: SectionId): string {
   return `${pathFor(locale, { page: 'home' })}#${sectionIds[section]}`
 }
 
-/** Paths of a route in every locale, plus `x-default` (the default locale). */
+/**
+ * Paths of a route in every locale, plus `x-default`: the language-detecting
+ * root page (`/`) for the home page, the default locale for every other page.
+ */
 export function alternatePaths(route: Route): Record<Locale | 'x-default', string> {
   const entries = locales.map((locale) => [locale, pathFor(locale, route)] as const)
-  return { ...Object.fromEntries(entries), 'x-default': pathFor(defaultLocale, route) } as Record<
-    Locale | 'x-default',
-    string
-  >
+  const xDefault = route.page === 'home' ? '/' : pathFor(defaultLocale, route)
+  return { ...Object.fromEntries(entries), 'x-default': xDefault } as Record<Locale | 'x-default', string>
 }
 
 export function docIdFromSlug(locale: Locale, slug: string): DocId | undefined {
