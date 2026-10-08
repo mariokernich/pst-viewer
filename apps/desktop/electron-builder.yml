@@ -107,6 +107,8 @@ nsis:
   artifactName: PST-Viewer-windows-${arch}-setup.${ext}
 
 linux:
+  # Without it, electron-builder derives the name from "@pst-viewer/desktop".
+  executableName: pst-viewer
   icon: build/icon.png
   category: Office
   target: [AppImage, deb]
