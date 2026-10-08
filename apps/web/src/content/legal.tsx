@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react'
-import { Todo } from '@/components/legal/todo'
 import type { Locale } from '@/lib/i18n'
 import type { LegalId } from '@/lib/routes'
 
 /**
- * Legal pages. These are PLACEHOLDERS: every <Todo> has to be completed (and
- * the texts reviewed) before the site goes live. The website facts stated
+ * Legal pages (legal notice and privacy policy). The website facts stated
  * here – hosted on GitHub Pages, no cookies, no tracking, fonts served with
  * the site, theme stored in localStorage – reflect the current
- * implementation; keep them in sync. PST Viewer is free and open source, so
- * there is nothing about sales or payments.
+ * implementation; keep them in sync and update `lastUpdated` with every
+ * change. PST Viewer is free and open source, so there is nothing about sales
+ * or payments.
  */
 
 const githubPrivacyStatement =
@@ -18,42 +17,55 @@ const githubPrivacyStatement =
 export interface LegalPage {
   title: string
   description: string
-  placeholderNotice: string
   body: ReactNode
 }
+
+const owner = {
+  name: 'Mario Kernich',
+  street: 'Veiter Berg 1',
+  city: '97294 Unterpleichfeld',
+  email: 'mario@kernich.de',
+  phone: '+49 1511 0573779',
+}
+
+const lastUpdated = { de: 'Oktober 2026', en: 'October 2026' }
+
+function Address({ country }: { country: string }) {
+  return (
+    <>
+      {owner.name}
+      <br />
+      {owner.street}
+      <br />
+      {owner.city}
+      <br />
+      {country}
+    </>
+  )
+}
+
+const mail = <a href={`mailto:${owner.email}`}>{owner.email}</a>
+const phone = <a href={`tel:${owner.phone.replace(/\s/g, '')}`}>{owner.phone}</a>
 
 const legalDe: Record<LegalId, LegalPage> = {
   legalNotice: {
     title: 'Impressum',
     description: 'Anbieterkennzeichnung von PST Viewer.',
-    placeholderNotice:
-      'Platzhalter: Die markierten Angaben müssen vor der Veröffentlichung ergänzt und rechtlich geprüft werden.',
     body: (
       <>
         <h2>Angaben gemäß § 5 DDG</h2>
         <p>
-          Mario Kernich
-          <br />
-          <Todo>Straße und Hausnummer</Todo>
-          <br />
-          <Todo>PLZ und Ort</Todo>
-          <br />
-          <Todo>Land</Todo>
+          <Address country="Deutschland" />
         </p>
         <h2>Kontakt</h2>
         <p>
-          E-Mail: <Todo>E-Mail-Adresse</Todo>
+          E-Mail: {mail}
           <br />
-          Telefon: <Todo>Telefonnummer (optional)</Todo>
+          Telefon: {phone}
         </p>
-        <h2>Umsatzsteuer-ID</h2>
+        <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
         <p>
-          Umsatzsteuer-Identifikationsnummer gemäß § 27a Umsatzsteuergesetz:{' '}
-          <Todo>USt-IdNr. eintragen – oder diesen Abschnitt entfernen, falls keine vorhanden ist</Todo>
-        </p>
-        <h2>Verantwortlich für den Inhalt</h2>
-        <p>
-          Mario Kernich, <Todo>Anschrift</Todo>
+          {owner.name}, {owner.street}, {owner.city}
         </p>
         <h2>Open-Source-Projekt</h2>
         <p>
@@ -66,17 +78,13 @@ const legalDe: Record<LegalId, LegalPage> = {
   privacy: {
     title: 'Datenschutzerklärung',
     description: 'Informationen zum Datenschutz auf dieser Website und in der App PST Viewer.',
-    placeholderNotice:
-      'Platzhalter: Die markierten Angaben müssen vor der Veröffentlichung ergänzt und rechtlich geprüft werden.',
     body: (
       <>
         <h2>1. Verantwortlicher</h2>
         <p>
-          Mario Kernich
+          <Address country="Deutschland" />
           <br />
-          <Todo>Anschrift</Todo>
-          <br />
-          E-Mail: <Todo>E-Mail-Adresse</Todo>
+          E-Mail: {mail}
         </p>
         <h2>2. Überblick</h2>
         <p>
@@ -94,11 +102,11 @@ const legalDe: Record<LegalId, LegalPage> = {
           <a href={githubPrivacyStatement}>Datenschutzerklärung von GitHub</a>.
         </p>
         <p>
-          <Todo>
-            Rechtsgrundlage (z. B. Art. 6 Abs. 1 lit. f DSGVO, berechtigtes Interesse an einer sicheren und
-            zuverlässigen Bereitstellung), Grundlage der Übermittlung in die USA (z. B. EU-US Data Privacy Framework)
-            und Speicherdauer der Logdateien prüfen und ergänzen
-          </Todo>
+          Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse liegt in einer sicheren und
+          zuverlässigen Bereitstellung der Website. Die Übermittlung in die USA stützt sich auf den
+          Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework (Art. 45 DSGVO), unter dem GitHub
+          zertifiziert ist. Wir selbst haben keinen Zugriff auf diese Logdateien; wie lange GitHub sie speichert, ergibt
+          sich aus der Datenschutzerklärung von GitHub.
         </p>
         <h2>4. Keine Cookies, kein Tracking</h2>
         <p>
@@ -113,9 +121,12 @@ const legalDe: Record<LegalId, LegalPage> = {
         </p>
         <h2>6. Kontakt</h2>
         <p>
-          <Todo>
-            Beschreiben, wie Anfragen (z. B. per E-Mail) verarbeitet werden: Zweck, Rechtsgrundlage und Speicherdauer
-          </Todo>
+          Wenn Sie uns per E-Mail oder Telefon kontaktieren, verarbeiten wir Ihre Angaben (z. B. Name, E-Mail-Adresse,
+          Inhalt der Anfrage) ausschließlich, um Ihre Anfrage zu beantworten. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b
+          DSGVO, soweit die Anfrage auf einen Vertrag oder vorvertragliche Maßnahmen zielt, im Übrigen Art. 6 Abs. 1 lit.
+          f DSGVO (berechtigtes Interesse an der Beantwortung). Wir löschen die Daten, sobald die Anfrage erledigt ist und
+          keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Beiträge in Issues oder Pull Requests auf GitHub sind
+          öffentlich; dafür gilt die Datenschutzerklärung von GitHub.
         </p>
         <h2>7. Links zu GitHub</h2>
         <p>
@@ -135,15 +146,16 @@ const legalDe: Record<LegalId, LegalPage> = {
         </p>
         <h2>9. Ihre Rechte</h2>
         <p>
-          <Todo>
-            Betroffenenrechte nach Art. 15 bis 21 DSGVO sowie das Beschwerderecht bei einer Aufsichtsbehörde nach Art.
-            77 DSGVO ergänzen
-          </Todo>
+          Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der
+          Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage von
+          Art. 6 Abs. 1 lit. f DSGVO (Art. 21). Wenden Sie sich dazu an {mail}.
+        </p>
+        <p>
+          Außerdem können Sie sich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO), zum Beispiel beim
+          für uns zuständigen Bayerischen Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach.
         </p>
         <h2>10. Stand</h2>
-        <p>
-          <Todo>Datum der letzten Aktualisierung</Todo>
-        </p>
+        <p>{lastUpdated.de}</p>
       </>
     ),
   },
@@ -153,33 +165,21 @@ const legalEn: Record<LegalId, LegalPage> = {
   legalNotice: {
     title: 'Legal notice',
     description: 'Provider information for PST Viewer.',
-    placeholderNotice: 'Placeholder: the marked details must be completed and legally reviewed before going live.',
     body: (
       <>
         <h2>Information pursuant to Section 5 of the German Digital Services Act (DDG)</h2>
         <p>
-          Mario Kernich
-          <br />
-          <Todo>Street and house number</Todo>
-          <br />
-          <Todo>Postcode and city</Todo>
-          <br />
-          <Todo>Country</Todo>
+          <Address country="Germany" />
         </p>
         <h2>Contact</h2>
         <p>
-          Email: <Todo>email address</Todo>
+          Email: {mail}
           <br />
-          Phone: <Todo>phone number (optional)</Todo>
+          Phone: {phone}
         </p>
-        <h2>VAT ID</h2>
+        <h2>Responsible for the content pursuant to Section 18(2) of the German Interstate Media Treaty (MStV)</h2>
         <p>
-          VAT identification number pursuant to Section 27a of the German VAT Act:{' '}
-          <Todo>add the VAT ID – or remove this section if there is none</Todo>
-        </p>
-        <h2>Responsible for the content</h2>
-        <p>
-          Mario Kernich, <Todo>address</Todo>
+          {owner.name}, {owner.street}, {owner.city}, Germany
         </p>
         <h2>Open source project</h2>
         <p>
@@ -192,16 +192,13 @@ const legalEn: Record<LegalId, LegalPage> = {
   privacy: {
     title: 'Privacy policy',
     description: 'Information about data protection on this website and in the PST Viewer app.',
-    placeholderNotice: 'Placeholder: the marked details must be completed and legally reviewed before going live.',
     body: (
       <>
         <h2>1. Controller</h2>
         <p>
-          Mario Kernich
+          <Address country="Germany" />
           <br />
-          <Todo>address</Todo>
-          <br />
-          Email: <Todo>email address</Todo>
+          Email: {mail}
         </p>
         <h2>2. Overview</h2>
         <p>
@@ -218,11 +215,10 @@ const legalEn: Record<LegalId, LegalPage> = {
           <a href={githubPrivacyStatement}>GitHub General Privacy Statement</a>.
         </p>
         <p>
-          <Todo>
-            review and add the legal basis (e.g. Art. 6(1)(f) GDPR, legitimate interest in a secure and reliable
-            website), the basis for the transfer to the USA (e.g. the EU-US Data Privacy Framework) and the log retention
-            period
-          </Todo>
+          The legal basis is Art. 6(1)(f) GDPR; our legitimate interest is the secure and reliable provision of the
+          website. The transfer to the USA is based on the European Commission’s adequacy decision for the EU-US Data
+          Privacy Framework (Art. 45 GDPR), under which GitHub is certified. We have no access to these log files
+          ourselves; how long GitHub keeps them is described in GitHub’s privacy statement.
         </p>
         <h2>4. No cookies, no tracking</h2>
         <p>This website sets no cookies and uses neither analytics nor marketing services. No usage profiles are created.</p>
@@ -234,7 +230,11 @@ const legalEn: Record<LegalId, LegalPage> = {
         </p>
         <h2>6. Contact</h2>
         <p>
-          <Todo>describe how enquiries (e.g. by email) are processed: purpose, legal basis and retention period</Todo>
+          If you contact us by email or phone, we process your details (e.g. name, email address, content of the enquiry)
+          only to answer your enquiry. The legal basis is Art. 6(1)(b) GDPR where the enquiry relates to a contract or
+          pre-contractual measures, otherwise Art. 6(1)(f) GDPR (legitimate interest in answering). We delete the data
+          once the enquiry has been dealt with, unless statutory retention obligations apply. Contributions to issues or
+          pull requests on GitHub are public; GitHub’s privacy statement applies to them.
         </p>
         <h2>7. Links to GitHub</h2>
         <p>
@@ -254,15 +254,17 @@ const legalEn: Record<LegalId, LegalPage> = {
         </p>
         <h2>9. Your rights</h2>
         <p>
-          <Todo>
-            add the data subject rights under Art. 15 to 21 GDPR and the right to lodge a complaint with a supervisory
-            authority under Art. 77 GDPR
-          </Todo>
+          You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of
+          processing (Art. 18), data portability (Art. 20) and to object to processing based on Art. 6(1)(f) GDPR (Art.
+          21). To exercise these rights, write to {mail}.
+        </p>
+        <p>
+          You also have the right to lodge a complaint with a data protection supervisory authority (Art. 77 GDPR), for
+          example the Bavarian Data Protection Authority responsible for us (Bayerisches Landesamt für
+          Datenschutzaufsicht, Promenade 18, 91522 Ansbach, Germany).
         </p>
         <h2>10. Last updated</h2>
-        <p>
-          <Todo>date of the last update</Todo>
-        </p>
+        <p>{lastUpdated.en}</p>
       </>
     ),
   },

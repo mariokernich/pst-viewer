@@ -1,4 +1,3 @@
-import { TriangleAlert } from 'lucide-react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { legal } from '@/content/legal'
@@ -38,14 +37,7 @@ export default async function LegalPage({ params }: PageProps<'/[locale]/[legal]
   return (
     <div className="mx-auto max-w-3xl px-4 pt-12 pb-24 sm:px-6 lg:pt-16">
       <h1 className="text-4xl font-semibold tracking-[-0.03em] text-balance text-foreground sm:text-5xl">{page.title}</h1>
-      <p
-        role="note"
-        className="mt-8 flex gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] p-4 text-[15px] leading-relaxed text-foreground"
-      >
-        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden="true" />
-        {page.placeholderNotice}
-      </p>
-      <div className="doc-prose mt-6">{page.body}</div>
+      <div className="doc-prose mt-8">{page.body}</div>
     </div>
   )
 }
