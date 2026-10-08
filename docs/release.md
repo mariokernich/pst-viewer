@@ -78,9 +78,33 @@ Without signing, SmartScreen warns ("Windows protected your PC" → More info �
 
 Free alternatives for open-source projects exist (e.g. SignPath Foundation); they need a separate integration.
 
-## iPhone and iPad
+## App Store (iPhone, iPad, Mac)
 
-iOS apps cannot be installed from GitHub Releases. They are distributed through the App Store (and TestFlight) only, see [store-release.md](store-release.md); developers can build and run the app from source with Xcode ([apps/ios/README.md](../apps/ios/README.md)).
+iOS apps cannot be installed from GitHub Releases; they are distributed through the App Store and TestFlight, see [store-release.md](store-release.md). Developers can build and run the app from source with Xcode ([apps/ios/README.md](../apps/ios/README.md)).
+
+The job `app-store` of the release workflow builds the iPhone/iPad app and the Mac App Store package on a macOS runner, signs them and uploads them to App Store Connect, where they appear in TestFlight after processing. Submitting a version for review stays manual: select the build on the version page and click *Add for Review*. The build number is `<run number>.<attempt>`; the version comes from release-please.
+
+| Secret | Value |
+| --- | --- |
+| `APP_STORE_CONNECT_API_KEY` | API key (`.p8`) as base64; App Store Connect → Users and Access → Integrations, role Developer |
+| `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID` | key ID and issuer ID of that key |
+| `APPLE_DISTRIBUTION_P12`, `APPLE_DISTRIBUTION_P12_PASSWORD` | *Apple Distribution* certificate with private key as base64 `.p12` |
+| `MAC_INSTALLER_P12`, `MAC_INSTALLER_P12_PASSWORD` | *Mac Installer Distribution* certificate with private key as base64 `.p12` |
+| `IOS_PROVISIONING_PROFILE` | App Store profile "PST Viewer iOS App Store CI" for `de.kernich.pstviewer` (base64) |
+| `MAC_PROVISIONING_PROFILE` | Mac App Store profile "PST Viewer Mac App Store CI" (base64) |
+
+The profiles must contain the certificate of `APPLE_DISTRIBUTION_P12`. Certificates and profiles expire after one year: renew them in the developer portal and update the secrets. To export a `.p12` for the secrets from a key and a certificate:
+
+```bash
+openssl x509 -inform der -in apple-distribution.cer -out apple-distribution.pem
+openssl pkcs12 -export -inkey apple-distribution.key -in apple-distribution.pem -out apple-distribution.p12 -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1
+```
+
+The same script uploads from a Mac with the identities in the keychain (iOS signs automatically through Xcode when `IOS_PROFILE_NAME` is not set):
+
+```bash
+ASC_KEY_ID=… ASC_ISSUER_ID=… BUILD_NUMBER=5 tools/app-store/upload.sh ios   # or mac
+```
 
 ## Building locally
 
