@@ -109,6 +109,8 @@ nsis:
 linux:
   # Without it, electron-builder derives the name from "@pst-viewer/desktop".
   executableName: pst-viewer
+  # Window class and .desktop file name match, so desktops group the windows.
+  syncDesktopName: true
   icon: build/icon.png
   category: Office
   target: [AppImage, deb]
