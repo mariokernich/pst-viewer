@@ -104,7 +104,7 @@ Environment variables: `PST_VIEWER_KEYSTORE`, `PST_VIEWER_KEYSTORE_PASSWORD`, `P
 
 ## Google Play notes
 
-- One-time purchase (paid app) without in-app purchases, ads, accounts, analytics, crash reporting or Firebase.
+- Free and open source (MIT), without in-app purchases, ads, accounts, analytics, crash reporting or Firebase.
 - **Data safety**: no data collected, no data shared. Mail stays on the device; the only network access is loading remote images the user allows for one message (WebView), links open in other apps. The `INTERNET` permission exists only for those images.
 - Target API 37, minimum API 26. Native code is built for 16 KB pages (`-z max-page-size=16384`) and stored uncompressed and aligned in the APK/AAB, as Google Play requires for Android 15+ devices; `zipalign -c -P 16 -v 4 app-release.apk` verifies it.
 - Upload an App Bundle (`bundleRelease`); Play delivers only the device's ABI. R8 keeps JNA and the generated bindings (`app/proguard-rules.pro`); upload `app/build/outputs/mapping/release/mapping.txt` for readable stack traces.

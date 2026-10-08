@@ -4,6 +4,8 @@ description = "Generates the Swift and Kotlin bindings of pst-viewer-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
 publish.workspace = true
 
 [dependencies]

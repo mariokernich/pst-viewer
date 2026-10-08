@@ -91,7 +91,7 @@ xcrun simctl io booted screenshot welcome.png
 
 ## App Store notes
 
-- One-time purchase without in-app purchases, ads, accounts, analytics or crash reporting SDKs. Privacy nutrition label: **Data Not Collected**.
+- Free and open source (MIT), without in-app purchases, ads, accounts, analytics or crash reporting SDKs. Privacy nutrition label: **Data Not Collected**.
 - The only network access is loading remote images the user allows for a message; links open in the system browser. No entitlements beyond the defaults are needed, no usage descriptions are required.
 - `ITSAppUsesNonExemptEncryption` is `NO` (`Config/Info.plist`); the app contains no encryption.
 - `PstViewer/PrivacyInfo.xcprivacy` declares no tracking and no collected data, plus the reasons for the required-reason APIs: user defaults (`CA92.1`), file metadata of user-picked files and container files (`3B52.1`, `C617.1`, used by the core) and elapsed-time measurement (`35F9.1`).

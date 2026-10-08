@@ -5,9 +5,11 @@ members = ["crates/core", "crates/uniffi-bindgen"]
 exclude = ["crates/vendor/outlook-pst"]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.0.0" # x-release-please-version
 edition = "2024"
 rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/mariokernich/pst-viewer"
 publish = false
 
 [patch.crates-io]

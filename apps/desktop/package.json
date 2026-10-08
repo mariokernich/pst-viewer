@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A fast, read-only viewer for Outlook data files (.pst).",
   "author": "Mario Kernich <mario@kernich.de>",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "main": "./out/main/index.js",
   "scripts": {
