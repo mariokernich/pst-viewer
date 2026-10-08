@@ -1,0 +1,133 @@
+# Releases with release-please: every push to main updates a release pull
+# request (next version from Conventional Commits, changelog). Merging it tags
+# the version, creates the GitHub release and builds the downloads below.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  desktop:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: --mac
+            files: apps/desktop/dist/*.dmg
+          - os: windows-latest
+            platform: --win
+            files: apps/desktop/dist/*-setup.exe
+          - os: ubuntu-latest
+            platform: --linux
+            files: apps/desktop/dist/*.AppImage apps/desktop/dist/*.deb
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pst-viewer/desktop build
+      - name: Package
+        shell: bash
+        working-directory: apps/desktop
+        env:
+          # Optional code signing (see docs/release.md). Without these secrets
+          # the builds are unsigned.
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE || secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE_PASSWORD || secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$CSC_LINK" ]; then
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            unset CSC_LINK CSC_KEY_PASSWORD
+            echo "::warning::No signing certificate configured, building unsigned."
+          fi
+          pnpm exec electron-builder ${{ matrix.platform }} --publish never
+      - name: Upload to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.release-please.outputs.tag }}" ${{ matrix.files }} --clobber
+
+  android:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check signing key
+        id: signing
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set, the APK is not built (see docs/release.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.signing.outputs.enabled == 'true'
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - if: steps.signing.outputs.enabled == 'true'
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+      - if: steps.signing.outputs.enabled == 'true'
+        run: sdkmanager "ndk;30.0.16248370"
+      - if: steps.signing.outputs.enabled == 'true'
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+      - if: steps.signing.outputs.enabled == 'true'
+        uses: Swatinem/rust-cache@63fed3e2fecf6f7b51dc6f043341b79ef82a9ae7 # v2.9.2
+      - if: steps.signing.outputs.enabled == 'true'
+        run: cargo install cargo-ndk --version 4.1.2 --locked
+      - name: Build the signed APK
+        if: steps.signing.outputs.enabled == 'true'
+        working-directory: apps/android
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/30.0.16248370
+          PST_VIEWER_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          PST_VIEWER_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          PST_VIEWER_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          export PST_VIEWER_KEYSTORE="$RUNNER_TEMP/release.jks"
+          ./gradlew assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/PST-Viewer-android.apk"
+      - name: Upload to the release
+        if: steps.signing.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.release-please.outputs.tag }}" "$RUNNER_TEMP/PST-Viewer-android.apk" --clobber

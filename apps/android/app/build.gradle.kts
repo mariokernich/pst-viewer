@@ -18,6 +18,12 @@ fun signingValue(property: String, variable: String): String? =
 
 val releaseStoreFile = signingValue("storeFile", "PST_VIEWER_KEYSTORE")
 
+// Updated by release-please with every release (keep the marker comment).
+val appVersion = "1.0.0" // x-release-please-version
+
+// 1.2.3 → 10203: grows with every release, as Google Play requires.
+val appVersionCode = appVersion.split(".").map(String::toInt).let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
+
 android {
     namespace = "de.kernich.pstviewer"
     compileSdk = 37
@@ -26,8 +32,8 @@ android {
         applicationId = "de.kernich.pstviewer"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = appVersionCode
+        versionName = appVersion
         // The ABIs the Rust core is built for (crates/core/scripts/build-android.sh);
         // JNA ships more, which would install on devices the core cannot run on.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }

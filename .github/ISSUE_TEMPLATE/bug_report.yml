@@ -1,0 +1,40 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please never attach real mailboxes or screenshots with private mail.** Use the demo data from `tools/demo-data` or remove private content first.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS, Windows, Linux, iPhone/iPad, Android]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: File format
+      multiple: true
+      options: [PST, OST, MSG, EML/EMLX, MBOX, Folder of mail files, Not related to a file]
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Size of the file, Outlook version that created it, error messages, logs.
