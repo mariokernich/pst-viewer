@@ -59,13 +59,15 @@ Google Play uses its own app signing; the upload key can be the same key or a se
 
 ### macOS signing and notarization
 
-Without signing, macOS shows "cannot be opened because the developer cannot be verified"; users open the app once with right-click → Open (or System Settings → Privacy & Security → Open Anyway). With an Apple Developer account:
+The GitHub downloads for macOS are signed with a *Developer ID Application* certificate and notarized with the App Store Connect API key (see the App Store section below), so Gatekeeper opens them without a warning.
 
 | Secret | Value |
 | --- | --- |
-| `MAC_CERTIFICATE` | *Developer ID Application* certificate as base64-encoded `.p12` |
+| `MAC_CERTIFICATE` | *Developer ID Application* certificate with private key as base64-encoded `.p12` |
 | `MAC_CERTIFICATE_PASSWORD` | password of the `.p12` |
-| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | for notarization (app-specific password from appleid.apple.com) |
+| `APP_STORE_CONNECT_API_KEY`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID` | used for notarization (`notarytool`) |
+
+Without `MAC_CERTIFICATE` the builds are unsigned; users then open the app once with right-click → Open (or System Settings → Privacy & Security → Open Anyway).
 
 ### Windows signing
 

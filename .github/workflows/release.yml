@@ -72,16 +72,26 @@ jobs:
           # the builds are unsigned.
           CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE || secrets.WINDOWS_CERTIFICATE }}
           CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE_PASSWORD || secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Notarization of the Mac builds with the App Store Connect API key.
+          ASC_KEY: ${{ matrix.os == 'macos-latest' && secrets.APP_STORE_CONNECT_API_KEY || '' }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           if [ -z "$CSC_LINK" ]; then
             export CSC_IDENTITY_AUTO_DISCOVERY=false
             unset CSC_LINK CSC_KEY_PASSWORD
             echo "::warning::No signing certificate configured, building unsigned."
+          elif [ -n "$ASC_KEY" ]; then
+            export APPLE_API_KEY="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+            echo "$ASC_KEY" | base64 --decode > "$APPLE_API_KEY"
+            export APPLE_API_KEY_ID="$ASC_KEY_ID" APPLE_API_ISSUER="$ASC_ISSUER_ID"
           fi
           pnpm exec electron-builder ${{ matrix.platform }} --publish never
+          if [ -n "${APPLE_API_KEY:-}" ]; then
+            rm -f "$APPLE_API_KEY"
+            # electron-builder notarizes and staples the app inside the DMGs.
+            for app in dist/mac*/*.app; do xcrun stapler validate "$app"; done
+          fi
       - name: Upload to the release
         shell: bash
         env:
