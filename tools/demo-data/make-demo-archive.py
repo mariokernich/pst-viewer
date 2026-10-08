@@ -103,6 +103,46 @@ def png(width: int, height: int, top: tuple, bottom: tuple) -> bytes:
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(b"".join(rows), 9)) + chunk(b"IEND", b"")
 
 
+def mockup(width: int = 560, height: int = 340) -> bytes:
+    """A simple wireframe of a web page (navigation, hero, three cards) as PNG."""
+    bg, line, soft, accent, accent2 = (246, 247, 250), (222, 225, 232), (233, 236, 242), (74, 92, 255), (122, 92, 255)
+    pixels = [[bg] * width for _ in range(height)]
+
+    def rect(x0, y0, x1, y1, color):
+        for y in range(max(0, y0), min(height, y1)):
+            row = pixels[y]
+            for x in range(max(0, x0), min(width, x1)):
+                row[x] = color(x, y) if callable(color) else color
+
+    rect(0, 0, width, 44, (255, 255, 255))
+    rect(0, 44, width, 45, line)
+    rect(24, 16, 44, 30, accent)
+    for i, w in enumerate((46, 58, 40, 52)):
+        rect(width - 300 + i * 70, 19, width - 300 + i * 70 + w, 27, line)
+    rect(24, 64, width - 24, 186, lambda x, y: tuple(int(a + (b - a) * (x - 24) / (width - 48)) for a, b in zip(accent, accent2)))
+    rect(48, 96, 300, 112, (255, 255, 255))
+    rect(48, 124, 240, 132, (205, 212, 255))
+    rect(48, 144, 136, 166, (255, 255, 255))
+    card = (width - 48 - 2 * 16) // 3
+    for i in range(3):
+        x = 24 + i * (card + 16)
+        rect(x, 204, x + card, height - 24, (255, 255, 255))
+        rect(x + 14, 220, x + 50, 244, soft)
+        rect(x + 14, 258, x + card - 30, 266, line)
+        rect(x + 14, 276, x + card - 60, 284, line)
+    for x in range(width):
+        pixels[0][x] = pixels[height - 1][x] = line
+    for y in range(height):
+        pixels[y][0] = pixels[y][width - 1] = line
+    rows = [b"\x00" + b"".join(bytes(c) for c in row) for row in pixels]
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(b"".join(rows), 9)) + chunk(b"IEND", b"")
+
+
 def ics(summary: str, start: dt.datetime, minutes: int, location: str, organizer, attendees) -> bytes:
     fmt = "%Y%m%dT%H%M%SZ"
     utc = start.astimezone(dt.timezone.utc)
@@ -197,7 +237,7 @@ def build() -> list[EmailMessage]:
     contract = pdf("Rahmenvertrag Website-Relaunch", ["Auftraggeber: Beispiel Handels GmbH", "Auftragnehmer: Nordwind Design GmbH", "Laufzeit: 12 Monate", "Vergütung: 24.500 EUR netto"])
     invoice = pdf("Rechnung 2026-1043", ["Weber IT-Service", "Wartungsvertrag Q3", "Betrag: 1.190,00 EUR (inkl. 19 % USt.)", "Zahlbar innerhalb von 14 Tagen"])
     offer = pdf("Angebot Messestand", ["Schröder Messebau", "Standfläche 24 qm, Systembau", "Grafik und Beleuchtung", "Gesamtpreis: 18.900 EUR netto"])
-    photo = png(480, 300, (61, 139, 255), (90, 61, 255))
+    photo = mockup()
     booth = png(640, 400, (255, 183, 77), (255, 112, 67))
     expenses = "Datum;Beschreibung;Betrag\n02.09.2026;Bahnfahrt Köln;89,90\n03.09.2026;Hotel;134,00\n03.09.2026;Bewirtung;56,40\n".encode()
     forwarded = message(p["lena"], [p["felix"]], "Freigabe Budget Stadtfest", at(20, 9, 12), ["Hallo Felix,", "das Budget für das Stadtfest ist freigegeben. Bitte stimme die Details mit dem Messebauer ab."], [inbox])
@@ -239,7 +279,7 @@ def build_en() -> list[EmailMessage]:
     contract = pdf("Framework Agreement Website Relaunch", ["Client: Sample Trading Ltd", "Contractor: Northwind Design Ltd", "Term: 12 months", "Fee: GBP 21,500 plus VAT"])
     invoice = pdf("Invoice 2026-1043", ["Brooks IT Services", "Maintenance contract Q3", "Amount: GBP 990.00 (incl. 20 % VAT)", "Payable within 14 days"])
     offer = pdf("Quote Exhibition Stand", ["Foster Exhibits", "Stand area 24 sqm, modular system", "Graphics and lighting", "Total: GBP 16,400 plus VAT"])
-    photo = png(480, 300, (61, 139, 255), (90, 61, 255))
+    photo = mockup()
     booth = png(640, 400, (255, 183, 77), (255, 112, 67))
     expenses = "Date,Description,Amount\n2026-09-02,Train to Manchester,79.90\n2026-09-03,Hotel,118.00\n2026-09-03,Client dinner,48.40\n".encode()
     forwarded = message(p["lena"], [p["felix"]], "Budget approved: City Festival", at(20, 9, 12), ["Hi Lucas,", "the budget for the city festival is approved. Please sort out the details with the stand builder."], [inbox])
