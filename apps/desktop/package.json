@@ -5,6 +5,13 @@
   "description": "A fast, read-only viewer for Outlook data files (.pst).",
   "author": "Mario Kernich <mario@kernich.de>",
   "license": "MIT",
+  "homepage": "https://mariokernich.github.io/pst-viewer/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mariokernich/pst-viewer.git",
+    "directory": "apps/desktop"
+  },
+  "bugs": "https://github.com/mariokernich/pst-viewer/issues",
   "private": true,
   "main": "./out/main/index.js",
   "scripts": {
