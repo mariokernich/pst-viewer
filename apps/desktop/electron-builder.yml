@@ -6,6 +6,11 @@ directories:
   buildResources: build
   output: dist
 
+# Releases are uploaded by the GitHub workflow (.github/workflows/release.yml).
+# Artifact names carry no version, so the website can link to
+# https://github.com/mariokernich/pst-viewer/releases/latest/download/<name>.
+publish: null
+
 files:
   - out/**
   - package.json
@@ -61,7 +66,7 @@ mac:
     NSHumanReadableCopyright: Copyright © 2026 Mario Kernich
 
 dmg:
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  artifactName: PST-Viewer-mac-${arch}.${ext}
 
 # Mac App Store: `APPLE_TEAM_ID=… pnpm dist:mas` (scripts/dist-mas.cjs adds the
 # team id, see docs/store-release.md). The app runs in the App Sandbox; recent
@@ -99,10 +104,16 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  artifactName: ${productName}-Setup-${version}.${ext}
+  artifactName: PST-Viewer-windows-${arch}-setup.${ext}
 
 linux:
   icon: build/icon.png
   category: Office
   target: [AppImage, deb]
   maintainer: Mario Kernich <mario@kernich.de>
+
+appImage:
+  artifactName: PST-Viewer-linux-x86_64.${ext}
+
+deb:
+  artifactName: PST-Viewer-linux-amd64.${ext}
