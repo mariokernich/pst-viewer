@@ -116,7 +116,7 @@ export const stores: Record<StoreId, Store> = {
     id: 'macAppStore',
     platform: 'mac',
     name: 'Mac App Store',
-    // TODO: set to true once Apple has approved the app (in review since 2026-10-08).
+    // TODO: set to true once Apple has approved the Mac version (in review since 2026-10-08).
     available: false,
     // Same App Store record for iPhone, iPad and Mac.
     url: 'https://apps.apple.com/app/id6820516765',
@@ -133,8 +133,8 @@ export const stores: Record<StoreId, Store> = {
     id: 'appStore',
     platform: 'ios',
     name: 'App Store',
-    // TODO: set to true once Apple has approved the app (in review since 2026-10-08).
-    available: false,
+    // Live since October 2026.
+    available: true,
     // Same App Store record for iPhone, iPad and Mac.
     url: 'https://apps.apple.com/app/id6820516765',
   },

@@ -44,16 +44,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Besides the downloads, the update files of the auto-updater
+          # (latest*.yml, the Mac ZIPs, the combined Windows installer that
+          # latest.yml points to, and the block maps for smaller updates).
           - os: macos-latest
             platform: --mac
-            files: apps/desktop/dist/*.dmg
+            files: apps/desktop/dist/*.dmg apps/desktop/dist/*.zip apps/desktop/dist/*.blockmap apps/desktop/dist/latest-mac.yml
           - os: windows-latest
             platform: --win
-            # Only the per-architecture installers, not the combined one.
-            files: apps/desktop/dist/*-x64-setup.exe apps/desktop/dist/*-arm64-setup.exe
+            files: apps/desktop/dist/*-setup.exe apps/desktop/dist/*.blockmap apps/desktop/dist/latest.yml
           - os: ubuntu-latest
             platform: --linux
-            files: apps/desktop/dist/*.AppImage apps/desktop/dist/*.deb
+            files: apps/desktop/dist/*.AppImage apps/desktop/dist/*.deb apps/desktop/dist/latest-linux.yml
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

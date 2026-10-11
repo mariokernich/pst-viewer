@@ -39,6 +39,7 @@ const api: PstViewerApi = {
   removeRecentFile: (path) => invoke('recent:remove', path),
   clearRecentFiles: () => invoke('recent:clear'),
 
+  installUpdate: () => invoke('app:installUpdate'),
   openExternal: (url) => invoke('shell:openExternal', url),
   showItemInFolder: (path) => invoke('shell:showItemInFolder', path),
 
@@ -49,7 +50,8 @@ const api: PstViewerApi = {
   onAccentColor: (callback) => on('app:accentColor', callback),
   onThemeChange: (callback) => on('app:theme', callback),
   onRecentChanged: (callback) => on('recent:changed', callback),
-  onLocaleChange: (callback) => on('app:locale', callback)
+  onLocaleChange: (callback) => on('app:locale', callback),
+  onUpdateReady: (callback) => on('app:update', callback)
 }
 
 contextBridge.exposeInMainWorld('pstViewer', api)

@@ -12,7 +12,7 @@ export const landingEn: LandingContent = {
     subtitle:
       'PST Viewer opens PST, MSG, EML and MBOX files in seconds, finds any message with full-text search and previews attachments right in the app – strictly read-only and entirely on your device.',
     secondaryCta: 'Source code on GitHub',
-    availability: 'For Mac, Windows, Linux and Android · iPhone & iPad coming soon',
+    availability: 'For Mac, Windows, Linux, Android, iPhone & iPad',
     trust: [
       'Read-only – your files stay untouched',
       '100% local – no upload',
@@ -179,10 +179,10 @@ export const landingEn: LandingContent = {
     eyebrow: 'Platforms',
     title: 'One viewer for all your devices.',
     subtitle:
-      'The desktop app runs on Mac, Windows and Linux, the Android app comes as an APK – all free from GitHub. The iPhone and iPad app is coming to the App Store.',
+      'The desktop app runs on Mac, Windows and Linux, the Android app comes as an APK – all free from GitHub. The iPhone and iPad app is free in the App Store.',
     badgeAvailable: 'Download now',
     badgeAndroid: 'APK available',
-    badgeComingSoon: 'Coming soon',
+    badgeIos: 'In the App Store',
     downloadsLink: 'Go to downloads',
     items: {
       desktop: {
@@ -191,7 +191,7 @@ export const landingEn: LandingContent = {
       },
       ios: {
         title: 'iPhone & iPad',
-        text: 'With the same features – coming to the App Store for free. Until then, you can build the app from source with Xcode.',
+        text: 'With the same features – free in the App Store, without in-app purchases. If you like, you can also build the app from source with Xcode.',
         sourceLink: 'Build from source',
       },
       android: {
@@ -263,7 +263,7 @@ export const landingEn: LandingContent = {
     subtitle:
       'Every version comes straight from GitHub Releases – no account, no detours. Pick the right file for your device.',
     allReleases: 'All releases & changelog',
-    iosText: 'Coming to the App Store for free. Until then, you can build the app from source with Xcode.',
+    iosText: 'Free in the App Store for iPhone and iPad. Alternatively, you can build the app from source with Xcode.',
     iosSourceLink: 'Instructions on GitHub',
     unsignedTitle: 'A note on the first launch',
     unsignedText:
@@ -336,7 +336,7 @@ export const landingEn: LandingContent = {
       {
         question: 'Is PST Viewer available for iPhone, iPad and Android?',
         answer:
-          'The Android app is available now as an APK on GitHub, with Google Play to follow. The iPhone and iPad app is coming to the App Store for free; until then, you can build it from source with Xcode. Both offer the same features as the desktop app.',
+          'The Android app is available now as an APK on GitHub, with Google Play to follow. The iPhone and iPad app is free in the App Store. Both offer the same features as the desktop app.',
       },
     ],
     more: 'You’ll find more answers in the documentation.',

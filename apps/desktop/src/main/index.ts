@@ -45,6 +45,7 @@ import { printDocument, removeExportFiles, renderPdf } from './exporter'
 import { formatLocale, setLanguageSetting, t, uiLocale } from './i18n'
 import { buildMenu } from './menu'
 import { isAccessError, isSandboxed, startAccess, stopAccess } from './sandbox'
+import { initUpdater, installNow, readyVersion } from './updater'
 import { addRecentFile, clearRecentFiles, listRecentFiles, recentBookmark, removeRecentFile, settings } from './store'
 import type { AttachmentData } from '../worker/protocol'
 import { PstWorkerClient, WorkerError } from './workerClient'
@@ -58,6 +59,8 @@ let mainWindow: BrowserWindow | null = null
 let currentFile: string | null = null
 let pendingPath: string | null = null
 let allowRemoteImages = false
+/** Set once the app quits, so closing the window is no longer turned into closing the file. */
+let quitting = false
 /** Paths the renderer may reveal in Finder/Explorer. */
 const revealablePaths = new Set<string>()
 /** Mac App Store: bookmarks of files picked in the open dialog, and the path being accessed. */
@@ -115,6 +118,16 @@ async function init(): Promise<void> {
   registerIpc()
   await refreshMenu()
   createWindow()
+  initUpdater({
+    window: () => mainWindow,
+    changed: () => {
+      void refreshMenu()
+      mainWindow?.webContents.send('app:update', readyVersion())
+    },
+    beforeInstall: () => {
+      quitting = true
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -138,7 +151,10 @@ app.on('window-all-closed', () => {
   else void refreshMenu()
 })
 
-app.on('before-quit', () => worker.stop())
+app.on('before-quit', () => {
+  quitting = true
+  worker.stop()
+})
 app.on('will-quit', () => {
   removeAttachmentCopiesSync()
   void removeExportFiles()
@@ -181,7 +197,14 @@ function createWindow(): void {
   if (saved?.maximized) win.maximize()
 
   win.once('ready-to-show', () => win.show())
-  win.on('close', () => {
+  win.on('close', (event) => {
+    // macOS: with a file open, the close button and ⌘W close the file and go
+    // back to the start screen; on the start screen they close the window.
+    if (isMac && !quitting && currentFile !== null) {
+      event.preventDefault()
+      win.webContents.send('menu:command', 'close')
+      return
+    }
     const b = win.getNormalBounds()
     settings().set('windowBounds', { ...b, maximized: win.isMaximized() })
   })
@@ -523,7 +546,8 @@ function registerIpc(): void {
       formatLocale: formatLocale(),
       accentColor: accentColor(),
       themeSource: nativeTheme.themeSource,
-      pendingPath: path
+      pendingPath: path,
+      updateReady: readyVersion()
     }
   })
 
@@ -710,6 +734,8 @@ function registerIpc(): void {
     clearRecentFiles()
     await refreshMenu()
   })
+
+  handle('app:installUpdate', () => installNow())
 
   handle('shell:openExternal', (url: unknown) => openExternalSafe(str(url, 'url')))
 

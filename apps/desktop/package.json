@@ -34,6 +34,7 @@
   "dependencies": {
     "@kenjiuno/decompressrtf": "^0.1.4",
     "@kenjiuno/msgreader": "^1.28.0",
+    "electron-updater": "^6.8.9",
     "iconv-lite": "^0.7.3",
     "long": "^5.3.2",
     "nodemailer": "^10.0.15",
