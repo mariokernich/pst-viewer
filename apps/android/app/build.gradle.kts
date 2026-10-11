@@ -19,7 +19,7 @@ fun signingValue(property: String, variable: String): String? =
 val releaseStoreFile = signingValue("storeFile", "PST_VIEWER_KEYSTORE")
 
 // Updated by release-please with every release (keep the marker comment).
-val appVersion = "1.0.0" // x-release-please-version
+val appVersion = "1.1.0" // x-release-please-version
 
 // 1.2.3 → 10203: grows with every release, as Google Play requires.
 val appVersionCode = appVersion.split(".").map(String::toInt).let { (major, minor, patch) -> major * 10000 + minor * 100 + patch }
