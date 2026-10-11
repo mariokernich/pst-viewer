@@ -141,6 +141,13 @@ const legalDe: Record<LegalId, LegalPage> = {
           standardmäßig blockiert und nur geladen, wenn Sie es für eine Nachricht erlauben.
         </p>
         <p>
+          Die Desktop-Version aus den GitHub-Downloads sucht beim Start und danach alle sechs Stunden auf GitHub nach einer
+          neuen Version und lädt sie gegebenenfalls herunter. Dabei erhält GitHub technisch notwendige Verbindungsdaten
+          wie Ihre IP-Adresse und die Version der App, aber keine Inhalte Ihrer Dateien. Sie können die automatische
+          Suche im Menü der App abschalten („Automatisch nach Updates suchen“). Die Store-Versionen werden über den
+          jeweiligen Store aktualisiert.
+        </p>
+        <p>
           Laden Sie die App künftig über einen Store herunter (Mac App Store, Microsoft Store, App Store, Google Play),
           gelten für den Download die Datenschutzbestimmungen des jeweiligen Store-Betreibers.
         </p>
@@ -247,6 +254,12 @@ const legalEn: Record<LegalId, LegalPage> = {
           The app processes your files exclusively on your device. No content is uploaded, no usage data (telemetry) is
           collected and no tracking is used. Remote images in emails are blocked by default and only loaded if you allow
           them for a message.
+        </p>
+        <p>
+          The desktop version from the GitHub downloads checks GitHub for a new version at startup and every six hours
+          after that, and downloads it if there is one. GitHub receives technically necessary connection data such as
+          your IP address and the app version, but nothing from your files. You can turn the automatic check off in the
+          app’s menu (“Check for Updates Automatically”). The store versions are updated by the respective store.
         </p>
         <p>
           If you download the app from a store in the future (Mac App Store, Microsoft Store, App Store, Google Play),

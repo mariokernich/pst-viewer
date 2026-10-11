@@ -59,7 +59,7 @@ export interface LandingContent {
   platforms: SectionIntro & {
     badgeAvailable: string
     badgeAndroid: string
-    badgeComingSoon: string
+    badgeIos: string
     downloadsLink: string
     items: {
       desktop: TitledText

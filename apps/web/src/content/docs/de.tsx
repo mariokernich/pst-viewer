@@ -1,5 +1,5 @@
 import { Callout, DocLink, DownloadTable, Kbd, LegalLink, ShortcutTable, Steps, SyntaxTable } from '@/components/docs/prose'
-import { downloads, github } from '@/lib/site'
+import { downloads, github, stores } from '@/lib/site'
 import type { DocsContent } from './types'
 
 const locale = 'de'
@@ -278,7 +278,9 @@ export const docsDe: DocsContent = {
                     <tr>
                       <td>iPhone &amp; iPad</td>
                       <td>App Store</td>
-                      <td>Demnächst</td>
+                      <td>
+                        <a href={stores.appStore.url}>Verfügbar</a>
+                      </td>
                     </tr>
                     <tr>
                       <td>Android</td>
@@ -794,6 +796,18 @@ export const docsDe: DocsContent = {
             <p>
               PST Viewer verarbeitet Ihre Dateien ausschließlich auf Ihrem Gerät. Es gibt keinen Upload, keine Cloud,
               kein Tracking und keine Telemetrie. Sie brauchen kein Konto und müssen sich nirgends anmelden.
+            </p>
+          ),
+        },
+        {
+          id: 'updates',
+          title: 'Updates',
+          body: (
+            <p>
+              Die Desktop-Downloads von GitHub halten sich selbst aktuell: Beim Start und danach alle sechs Stunden suchen
+              sie auf GitHub nach einer neuen Version, laden sie im Hintergrund herunter und installieren sie beim nächsten
+              Beenden oder Neustart. Über <strong>Nach Updates suchen …</strong> im Menü geht das auch sofort; dort lässt
+              sich die automatische Suche auch abschalten. Die Store-Versionen aktualisiert der App Store, das Linux-Paket (.deb) aktualisieren Sie mit dem neuen Download.
             </p>
           ),
         },

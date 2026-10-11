@@ -87,7 +87,7 @@ export function Platforms({ locale }: { locale: Locale }) {
               <CardHeader
                 icon={TabletSmartphone}
                 title={t.items.ios.title}
-                badge={<Badge available={false}>{t.badgeComingSoon}</Badge>}
+                badge={<Badge available>{t.badgeIos}</Badge>}
               />
               <p className="mt-3 leading-relaxed text-muted">{t.items.ios.text}</p>
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
