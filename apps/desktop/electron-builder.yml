@@ -62,6 +62,8 @@ electronFuses:
   onlyLoadAppFromAsar: true
 
 mac:
+  # Name of the ZIPs of the auto-updater; the DMGs have their own below.
+  artifactName: PST-Viewer-mac-${arch}.${ext}
   category: public.app-category.productivity
   icon: build/icon.png
   target:
@@ -76,9 +78,6 @@ mac:
     NSHumanReadableCopyright: Copyright © 2026 Mario Kernich
 
 dmg:
-  artifactName: PST-Viewer-mac-${arch}.${ext}
-
-zip:
   artifactName: PST-Viewer-mac-${arch}.${ext}
 
 # Mac App Store: `APPLE_TEAM_ID=… pnpm dist:mas` (scripts/dist-mas.cjs adds the
