@@ -2060,7 +2060,8 @@
             "value": "Gespeichert werden nur Name, Größe und Ort geöffneter Dateien – niemals E-Mail-Inhalte."
           }
         }
-      }
+      },
+      "extractionState": "stale"
     },
     "Only: %@": {
       "localizations": {
@@ -3492,6 +3493,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%1$@“ nur in %2$@"
+          }
+        }
+      }
+    },
+    "Help & Feedback": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilfe & Feedback"
+          }
+        }
+      }
+    },
+    "Website & Help": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webseite & Hilfe"
+          }
+        }
+      }
+    },
+    "Source Code on GitHub": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellcode auf GitHub"
+          }
+        }
+      }
+    },
+    "Report a Problem": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem melden"
+          }
+        }
+      }
+    },
+    "Rate PST Viewer": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PST Viewer bewerten"
+          }
+        }
+      }
+    },
+    "Free and open source (MIT). Only names, sizes and locations of opened files are stored, never mail content.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenlos und Open Source (MIT). Gespeichert werden nur Namen, Größen und Speicherorte geöffneter Dateien, niemals E-Mail-Inhalte."
           }
         }
       }

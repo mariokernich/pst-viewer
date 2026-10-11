@@ -1,7 +1,7 @@
 import PstViewerCore
 import SwiftUI
 
-/// Appearance, language, recent files and information about the app.
+/// Appearance, language, help links, recent files and information about the app.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -12,25 +12,21 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("Appearance") {
-                    Picker("Appearance", selection: $appearance) {
-                        ForEach(Appearance.allCases) { option in
-                            Text(verbatim: option.label).tag(option)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    AppearancePicker(selection: $appearance)
                 }
 
                 Section {
                     Button {
                         if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                     } label: {
-                        LabeledContent("Language") {
+                        LabeledContent {
                             HStack(spacing: 6) {
                                 Text(verbatim: currentLanguage)
                                 Image(systemName: "arrow.up.forward.app")
                                     .imageScale(.small)
                             }
+                        } label: {
+                            SettingsLabel("Language", symbol: "globe", color: .blue)
                         }
                     }
                     .foregroundStyle(.primary)
@@ -38,18 +34,35 @@ struct SettingsView: View {
                     Text("PST Viewer is available in German and English. Choose the language in the Settings app.")
                 }
 
-                Section {
-                    Button("Clear Recent Files", role: .destructive) { model.recents.clear() }
-                        .disabled(model.recents.files.isEmpty)
-                } footer: {
-                    Text("Only names, sizes and locations of opened files are stored, never mail content.")
+                Section("Help & Feedback") {
+                    LinkRow("Website & Help", symbol: "safari", color: .green, url: Links.website)
+                    LinkRow("Source Code on GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: Color(white: 0.3), url: Links.sourceCode)
+                    LinkRow("Report a Problem", symbol: "ladybug", color: .orange, url: Links.reportProblem)
+                    LinkRow("Rate PST Viewer", symbol: "star", color: .pink, url: Links.review)
                 }
 
-                Section("About") {
-                    LabeledContent("Version", value: appVersion)
-                    LabeledContent("Core", value: coreVersion())
-                    NavigationLink("Privacy") { PrivacyView() }
-                    NavigationLink("Open-Source Licences") { LicensesView() }
+                Section {
+                    NavigationLink { PrivacyView() } label: {
+                        SettingsLabel("Privacy", symbol: "hand.raised", color: .indigo)
+                    }
+                    NavigationLink { LicensesView() } label: {
+                        SettingsLabel("Open-Source Licences", symbol: "doc.text", color: .gray)
+                    }
+                    Button(role: .destructive) { model.recents.clear() } label: {
+                        SettingsLabel("Clear Recent Files", symbol: "trash", color: .red)
+                            .foregroundStyle(model.recents.files.isEmpty ? Color.secondary : Color.red)
+                    }
+                    .disabled(model.recents.files.isEmpty)
+                } header: {
+                    Text("About")
+                } footer: {
+                    VStack(spacing: 4) {
+                        Text(verbatim: "PST Viewer \(appVersion) · Core \(coreVersion())")
+                        Text("Free and open source (MIT). Only names, sizes and locations of opened files are stored, never mail content.")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 8)
                 }
             }
             .navigationTitle("Settings")
@@ -73,6 +86,154 @@ struct SettingsView: View {
     private var currentLanguage: String {
         let code = Bundle.main.preferredLocalizations.first ?? "en"
         return Locale.current.localizedString(forLanguageCode: code)?.localizedCapitalized ?? code
+    }
+}
+
+/// Pages of the project, opened in the browser.
+private enum Links {
+    static var website: URL {
+        let language = Bundle.main.preferredLocalizations.first == "de" ? "de" : "en"
+        return URL(string: "https://mariokernich.github.io/pst-viewer/\(language)/docs/")!
+    }
+
+    static let sourceCode = URL(string: "https://github.com/mariokernich/pst-viewer")!
+    static let reportProblem = URL(string: "https://github.com/mariokernich/pst-viewer/issues")!
+    static let review = URL(string: "https://apps.apple.com/app/id6820516765?action=write-review")!
+}
+
+/// A row title with a coloured icon, like the rows of the Settings app.
+private struct SettingsLabel: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    let color: Color
+
+    init(_ title: LocalizedStringKey, symbol: String, color: Color) {
+        self.title = title
+        self.symbol = symbol
+        self.color = color
+    }
+
+    var body: some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(color.gradient, in: .rect(cornerRadius: 7))
+        }
+    }
+}
+
+/// A row that opens a web page in the browser.
+private struct LinkRow: View {
+    @Environment(\.openURL) private var openURL
+    let title: LocalizedStringKey
+    let symbol: String
+    let color: Color
+    let url: URL
+
+    init(_ title: LocalizedStringKey, symbol: String, color: Color, url: URL) {
+        self.title = title
+        self.symbol = symbol
+        self.color = color
+        self.url = url
+    }
+
+    var body: some View {
+        Button { openURL(url) } label: {
+            HStack {
+                SettingsLabel(title, symbol: symbol, color: color)
+                Spacer()
+                Image(systemName: "arrow.up.forward")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .foregroundStyle(.primary)
+        .accessibilityHint(Text(verbatim: url.host() ?? ""))
+    }
+}
+
+/// System, light and dark as small previews with a selection mark, like
+/// "Display & Brightness" in the Settings app.
+private struct AppearancePicker: View {
+    @Binding var selection: Appearance
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Appearance.allCases) { option in
+                Button {
+                    withAnimation(.snappy) { selection = option }
+                } label: {
+                    VStack(spacing: 8) {
+                        AppearancePreview(option: option)
+                        Text(verbatim: option.label)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Image(systemName: selection == option ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(selection == option ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: option.label))
+                .accessibilityAddTraits(selection == option ? [.isButton, .isSelected] : .isButton)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+/// A miniature screen in the colours of an appearance.
+private struct AppearancePreview: View {
+    let option: Appearance
+
+    var body: some View {
+        ZStack {
+            switch option {
+            case .system:
+                // The same screen, light on the left and dark on the right.
+                Screen(dark: false)
+                    .overlay {
+                        Screen(dark: true)
+                            .mask(alignment: .trailing) { Rectangle().frame(width: 31) }
+                    }
+            case .light:
+                Screen(dark: false)
+            case .dark:
+                Screen(dark: true)
+            }
+        }
+        .frame(width: 62, height: 108)
+        .clipShape(.rect(cornerRadius: 12))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12).strokeBorder(.separator, lineWidth: 1)
+        }
+    }
+
+    /// Background and a few lines of a message list.
+    private struct Screen: View {
+        let dark: Bool
+
+        var body: some View {
+            let line = dark ? Color(white: 0.32) : Color(white: 0.82)
+            ZStack(alignment: .topLeading) {
+                dark ? Color(white: 0.11) : Color(white: 0.96)
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach([0.7, 0.9, 0.55, 0.8, 0.6], id: \.self) { width in
+                        Capsule().fill(line).frame(width: 46 * width, height: 5)
+                    }
+                }
+                .padding(.top, 14)
+                .padding(.leading, 8)
+            }
+        }
     }
 }
 
