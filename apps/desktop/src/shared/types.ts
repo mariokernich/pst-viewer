@@ -348,6 +348,8 @@ export interface AppInfo extends LocaleInfo {
   themeSource: ThemeSource
   /** A file the app was asked to open before the UI was ready. */
   pendingPath: string | null
+  /** Version of a downloaded update that is installed on restart. */
+  updateReady: string | null
 }
 
 export type MenuCommand =

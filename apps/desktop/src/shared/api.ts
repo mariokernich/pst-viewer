@@ -54,6 +54,8 @@ export interface PstViewerApi {
   removeRecentFile(path: string): Call<RecentFile[]>
   clearRecentFiles(): Call<void>
 
+  /** Quits and installs the downloaded update. */
+  installUpdate(): Call<void>
   openExternal(url: string): Call<void>
   showItemInFolder(path: string): Call<void>
 
@@ -65,4 +67,5 @@ export interface PstViewerApi {
   onThemeChange(callback: (source: ThemeSource) => void): Unsubscribe
   onRecentChanged(callback: () => void): Unsubscribe
   onLocaleChange(callback: (locale: LocaleInfo) => void): Unsubscribe
+  onUpdateReady(callback: (version: string | null) => void): Unsubscribe
 }

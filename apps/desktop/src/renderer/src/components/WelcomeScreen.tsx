@@ -1,9 +1,10 @@
 import clsx from 'clsx'
-import { CircleAlert, Clock, Folder, FolderSearch, FolderOpen, Lock, Upload, X } from 'lucide-react'
+import { Bug, CircleAlert, Clock, Download, Folder, FolderSearch, FolderOpen, Globe, Lock, Upload, X } from 'lucide-react'
 import { useRef } from 'react'
+import { links } from '@shared/links'
 import type { RecentFile } from '@shared/types'
 import { bridge } from '@/api'
-import { errorMessage, t, tp } from '@/i18n'
+import { errorMessage, locale, t, tp } from '@/i18n'
 import { dirname, formatRelative, formatSize, prettyPath } from '@/lib/format'
 import { useApp } from '@/store'
 import { AppIcon } from './AppIcon'
@@ -18,7 +19,9 @@ export function WelcomeScreen({ dragActive }: { dragActive: boolean }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="drag h-11 shrink-0" />
+      <div className="drag flex h-11 shrink-0 items-center justify-end px-3 in-[.platform-win32]:pr-40">
+        <UpdatePill />
+      </div>
       <div className="flex min-h-0 flex-1 items-center justify-center gap-[clamp(2rem,4vw,3rem)] overflow-auto px-8 pb-12 max-[820px]:flex-col max-[820px]:justify-start">
         <section className="flex w-[min(420px,40vw)] shrink-0 animate-slide-up flex-col max-[820px]:w-full max-[820px]:max-w-[420px]">
           <AppIcon size={84} className="drop-shadow-[0_10px_24px_rgb(70_80_255/0.35)]" />
@@ -91,7 +94,58 @@ export function WelcomeScreen({ dragActive }: { dragActive: boolean }) {
           {recent.length === 0 ? <EmptyRecent /> : <RecentList files={recent} />}
         </section>
       </div>
+      <Footer />
     </div>
+  )
+}
+
+/** Shown once an update has been downloaded; it is also installed on the next quit. */
+function UpdatePill() {
+  const version = useApp((s) => s.info?.updateReady)
+  if (!version) return null
+  return (
+    <div className="flex animate-pop-in items-center gap-2 rounded-full bg-accent/12 py-1 pr-1 pl-3 text-[12px] font-medium text-accent">
+      <Download className="size-3.5" strokeWidth={2.2} />
+      {t('updateReady', { version })}
+      <button type="button" onClick={() => void bridge.installUpdate()} className="rounded-full bg-surface px-2.5 py-0.5 text-fg shadow-sm transition-colors hover:bg-hover">
+        {t('restart')}
+      </button>
+    </div>
+  )
+}
+
+function Footer() {
+  const version = useApp((s) => s.info?.version)
+  const link = (href: string, label: string, Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>) => (
+    <a
+      href={href}
+      onClick={(event) => {
+        event.preventDefault()
+        void bridge.openExternal(href)
+      }}
+      className="flex items-center gap-1.5 rounded-md text-accent hover:underline focus-visible:underline"
+    >
+      <Icon className="size-3.5" strokeWidth={2} />
+      {label}
+    </a>
+  )
+  return (
+    <footer className="flex shrink-0 flex-wrap items-center justify-center gap-x-5 gap-y-1.5 border-t border-line px-6 py-3 text-[12px] text-fg-subtle">
+      {version && <span>{t('version', { version })}</span>}
+      {link(links.website(locale()), t('website'), Globe)}
+      {link(links.sourceCode, t('sourceCode'), GitHubIcon)}
+      {link(links.reportProblem, t('reportProblem'), Bug)}
+      <span>{t('openSource')}</span>
+    </footer>
+  )
+}
+
+/** lucide-react no longer ships brand icons. */
+function GitHubIcon({ className }: { className?: string; strokeWidth?: number }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={className} fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
   )
 }
 

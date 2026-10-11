@@ -13,6 +13,8 @@ interface Settings {
   windowBounds?: { x?: number; y?: number; width: number; height: number; maximized?: boolean }
   themeSource?: ThemeSource
   language?: LanguageSetting
+  /** Check GitHub Releases for updates in the background (downloads only). */
+  autoUpdate?: boolean
   recentFiles?: StoredRecentFile[]
 }
 

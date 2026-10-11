@@ -51,7 +51,21 @@ const de = {
   exportTextTitle: 'Als Text exportieren',
   pdfFilter: 'PDF-Dokument',
   emlFilter: 'E-Mail-Nachricht',
-  textFilter: 'Textdatei'
+  textFilter: 'Textdatei',
+  checkForUpdates: 'Nach Updates suchen …',
+  autoCheckUpdates: 'Automatisch nach Updates suchen',
+  restartToUpdate: 'Neu starten und Update installieren',
+  updateReady: 'Version {version} ist bereit',
+  updateReadyDetail: 'PST Viewer wird neu gestartet, um das Update zu installieren. Sonst wird es beim nächsten Beenden installiert.',
+  restartNow: 'Jetzt neu starten',
+  later: 'Später',
+  upToDate: 'PST Viewer ist auf dem neuesten Stand',
+  upToDateDetail: 'Version {version} ist die aktuelle Version.',
+  updateFailed: 'Suche nach Updates fehlgeschlagen',
+  updateFailedDetail: 'GitHub ist gerade nicht erreichbar. Bitte versuchen Sie es später noch einmal.',
+  website: 'Webseite und Hilfe',
+  sourceCode: 'Quellcode auf GitHub',
+  reportProblem: 'Problem melden'
 }
 
 type Strings = typeof de
@@ -105,7 +119,21 @@ const en: Strings = {
   exportTextTitle: 'Export as Text',
   pdfFilter: 'PDF Document',
   emlFilter: 'Email Message',
-  textFilter: 'Text File'
+  textFilter: 'Text File',
+  checkForUpdates: 'Check for Updates…',
+  autoCheckUpdates: 'Check for Updates Automatically',
+  restartToUpdate: 'Restart to Install Update',
+  updateReady: 'Version {version} is ready',
+  updateReadyDetail: 'PST Viewer restarts to install the update. Otherwise it is installed the next time you quit.',
+  restartNow: 'Restart Now',
+  later: 'Later',
+  upToDate: 'PST Viewer is up to date',
+  upToDateDetail: 'Version {version} is the latest version.',
+  updateFailed: 'Couldn’t check for updates',
+  updateFailedDetail: 'GitHub can’t be reached right now. Try again later.',
+  website: 'Website and Help',
+  sourceCode: 'Source Code on GitHub',
+  reportProblem: 'Report a Problem'
 }
 
 function systemLocale(): string {

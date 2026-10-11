@@ -114,7 +114,8 @@ function useMenuCommands(): void {
             void state.openDialog('folder')
             break
           case 'close':
-            if (inMailbox) void state.closeFile()
+            // Also sent by the main process when the window is closed with a file open.
+            if (state.screen !== 'loading') void state.closeFile()
             break
           case 'find':
             if (inMailbox) state.focusSearch()
@@ -223,7 +224,12 @@ function useBridgeEvents(): void {
       const current = useApp.getState().info
       if (current) useApp.setState({ info: { ...current, locale, formatLocale } })
     })
+    const offUpdate = bridge.onUpdateReady((updateReady) => {
+      const current = useApp.getState().info
+      if (current) useApp.setState({ info: { ...current, updateReady } })
+    })
     return () => {
+      offUpdate()
       offAccent()
       offOpen()
       offRecent()

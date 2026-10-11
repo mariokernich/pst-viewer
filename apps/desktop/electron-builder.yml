@@ -6,10 +6,17 @@ directories:
   buildResources: build
   output: dist
 
-# Releases are uploaded by the GitHub workflow (.github/workflows/release.yml).
-# Artifact names carry no version, so the website can link to
+# Releases are uploaded by the GitHub workflow (.github/workflows/release.yml,
+# electron-builder runs with --publish never). Artifact names carry no version,
+# so the website can link to
 # https://github.com/mariokernich/pst-viewer/releases/latest/download/<name>.
-publish: null
+# The publish target still matters: electron-builder writes the update files
+# (latest.yml, latest-mac.yml, latest-linux.yml) and app-update.yml, with which
+# the app finds updates in the GitHub releases (src/main/updater.ts).
+publish:
+  provider: github
+  owner: mariokernich
+  repo: pst-viewer
 
 files:
   - out/**
@@ -60,12 +67,18 @@ mac:
   target:
     - target: dmg
       arch: [arm64, x64]
+    # The auto-updater installs from the ZIP, the DMG is for new installs.
+    - target: zip
+      arch: [arm64, x64]
   hardenedRuntime: true
   darkModeSupport: true
   extendInfo:
     NSHumanReadableCopyright: Copyright © 2026 Mario Kernich
 
 dmg:
+  artifactName: PST-Viewer-mac-${arch}.${ext}
+
+zip:
   artifactName: PST-Viewer-mac-${arch}.${ext}
 
 # Mac App Store: `APPLE_TEAM_ID=… pnpm dist:mas` (scripts/dist-mas.cjs adds the
